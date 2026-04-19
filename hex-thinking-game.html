@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex Thinking Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .grid { display: grid; grid-template-columns: repeat(7, 50px); gap: 5px; }
+        .cell { width: 50px; height: 50px; background-color: #eee; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 24px; }
+        .cell:hover { background-color: #ddd; }
+        .message { margin-top: 20px; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Hex Thinking Game</h1>
+    <div class="grid" id="grid"></div>
+    <div class="message" id="message"></div>
+    <script>
+        const gridElement = document.getElementById('grid');
+        const messageElement = document.getElementById('message');
+        const gridSize = 7;
+        let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(null));
+
+        function createGrid() {
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.onclick = () => handleCellClick(row, col);
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(row, col) {
+            if (grid[row][col] === null) {
+                grid[row][col] = 'X'; // Example player mark
+                updateGrid();
+                checkWin();
+            }
+        }
+
+        function updateGrid() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const row = cell.dataset.row;
+                const col = cell.dataset.col;
+                cell.textContent = grid[row][col] !== null ? grid[row][col] : '';
+            });
+        }
+
+        function checkWin() {
+            // Simple win condition check (modify as needed)
+            messageElement.textContent = 'Player X wins!';
+        }
+
+        createGrid();
+    </script>
+</body>
+</html>
