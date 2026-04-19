@@ -1,12 +1,1592 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Hexagonal Thinking Game</title>
-    <link rel="stylesheet" type="text/css" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>AP World History — Hexagonal Thinking</title>
+<style>
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Georgia', serif; background: #0d1b2a; color: #e8dcc8; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; -webkit-tap-highlight-color: transparent; }
+.screen { display: none; width: 100%; height: 100dvh; overflow-y: auto; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ── SETUP ── */
+#screen-setup { align-items: center; padding: 24px 16px 48px; gap: 16px; background: linear-gradient(150deg, #0d1b2a 0%, #1a2d42 100%); }
+.setup-hero { text-align: center; }
+.setup-hero h1 { font-size: 1.8rem; color: #d4aa60; letter-spacing:.04em; }
+.setup-hero p  { font-size: .82rem; color: #7a9ab8; margin-top: 4px; }
+.setup-card { width: 100%; max-width: 560px; background: rgba(255,255,255,.04); border: 1px solid rgba(212,170,96,.25); border-radius: 14px; padding: 18px; }
+.setup-card h2 { font-size: .75rem; color: #d4aa60; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
+.mode-tabs { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+.mode-tab { flex: 1; min-width: 80px; background: rgba(255,255,255,.04); border: 1.5px solid rgba(255,255,255,.12); border-radius: 8px; padding: 8px 6px; color: #8a9ab8; font-family: inherit; font-size: .72rem; cursor: pointer; text-align: center; transition: all .18s; line-height: 1.3; }
+.mode-tab .mt-icon { font-size: 1.1rem; display: block; margin-bottom: 2px; }
+.mode-tab:hover { border-color: #d4aa60; }
+.mode-tab.sel { background: rgba(212,170,96,.15); border-color: #d4aa60; color: #d4aa60; }
+.sel-grid { display: grid; gap: 7px; }
+.sel-grid.cols-3 { grid-template-columns: repeat(3,1fr); }
+.sel-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.sel-grid.cols-1 { grid-template-columns: 1fr; }
+.sel-btn { background: rgba(255,255,255,.04); border: 1.5px solid rgba(255,255,255,.12); border-radius: 10px; padding: 10px 8px; color: #b8cce0; font-family: inherit; font-size: .74rem; cursor: pointer; text-align: left; transition: all .18s; line-height: 1.4; }
+.sel-btn .sb-top { font-size: 1rem; font-weight: bold; display: block; color: #d4aa60; }
+.sel-btn .sb-sub { font-size: .65rem; color: #7a9ab8; display: block; margin-top: 1px; }
+.sel-btn:hover { border-color: #d4aa60; }
+.sel-btn.sel { background: rgba(212,170,96,.15); border-color: #d4aa60; color: #d4aa60; }
+.chaos-btn { width: 100%; background: linear-gradient(135deg, rgba(220,60,60,.15), rgba(60,60,220,.15)); border: 2px solid rgba(220,100,100,.4); border-radius: 12px; padding: 14px; color: #e8dcc8; font-family: inherit; font-size: .9rem; cursor: pointer; text-align: center; transition: all .2s; line-height: 1.4; }
+.chaos-btn .cb-icon { font-size: 1.6rem; display: block; }
+.chaos-btn .cb-title { font-size: 1rem; font-weight: bold; color: #ff8080; display: block; }
+.chaos-btn .cb-sep { display: block; height: 6px; }
+.chaos-btn .cb-sub { font-size: .72rem; color: #8a9ab8; display: block; }
+.chaos-btn:hover { border-color: #ff8080; background: rgba(220,60,60,.2); }
+.chaos-btn.sel { border-color: #ff8080; background: rgba(220,60,60,.25); }
+.timer-row { display: flex; gap: 6px; margin-top: 8px; }
+.timer-opt { flex: 1; background: rgba(255,255,255,.04); border: 1.5px solid rgba(255,255,255,.12); border-radius: 8px; padding: 8px 4px; color: #8a9ab8; font-family: inherit; font-size: .74rem; cursor: pointer; text-align: center; transition: all .18s; }
+.timer-opt:hover { border-color: #d4aa60; }
+.timer-opt.sel { background: rgba(212,170,96,.15); border-color: #d4aa60; color: #d4aa60; }
+.player-list { display: flex; flex-direction: column; gap: 7px; }
+.player-row { display: flex; align-items: center; gap: 8px; }
+.pdot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.player-input { flex: 1; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.18); border-radius: 7px; padding: 8px 12px; color: #e8dcc8; font-family: inherit; font-size: .88rem; outline: none; }
+.player-input:focus { border-color: #d4aa60; }
+.btn-rm { background: none; border: none; color: #e05555; cursor: pointer; font-size: 1.2rem; padding: 2px 6px; opacity: .7; }
+.btn-rm:hover { opacity: 1; }
+.btn-add { background: none; border: 1px dashed rgba(212,170,96,.35); border-radius: 7px; color: #d4aa60; font-family: inherit; font-size: .82rem; padding: 8px; cursor: pointer; width: 100%; margin-top: 5px; }
+.btn-add:hover { background: rgba(212,170,96,.08); }
+.sel-summary { text-align: center; font-size: .78rem; color: #7a9ab8; padding: 4px 0; font-style: italic; }
+.btn-start { background: linear-gradient(135deg, #d4aa60, #b07830); border: none; border-radius: 12px; color: #0d1b2a; font-family: 'Georgia', serif; font-size: 1.1rem; font-weight: bold; padding: 14px; cursor: pointer; width: 100%; max-width: 560px; letter-spacing: .04em; transition: transform .12s, box-shadow .12s; box-shadow: 0 4px 20px rgba(212,170,96,.3); }
+.btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(212,170,96,.45); }
+.btn-start:active { transform: translateY(0); }
+.btn-start:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+.btn-rules { background: transparent; border: 1px solid rgba(212,170,96,.4); border-radius: 10px; color: #d4aa60; font-family: inherit; font-size: .9rem; padding: 10px 20px; cursor: pointer; width: 100%; max-width: 560px; letter-spacing: .03em; transition: background .15s, border-color .15s; }
+.btn-rules:hover { background: rgba(212,170,96,.1); border-color: rgba(212,170,96,.7); }
+.rules-section { margin: 14px 0 6px; }
+.rules-section h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: #d4aa60; margin: 0 0 6px; }
+.rules-section p, .rules-section li { font-size: .85rem; color: #c8d8e8; line-height: 1.55; margin: 0 0 5px; }
+.rules-section ul { padding-left: 18px; margin: 4px 0 8px; }
+.rules-spice { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rules-spice span { font-size: .75rem; padding: 3px 8px; border-radius: 20px; font-weight: bold; }
+
+/* ── GAME ── */
+#screen-game { overflow: hidden; height: 100dvh; }
+#scoreboard { display: flex; gap: 6px; padding: 7px 10px; background: rgba(0,0,0,.5); border-bottom: 1px solid rgba(255,255,255,.08); overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
+#scoreboard::-webkit-scrollbar { display: none; }
+.score-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 4px 12px 4px 6px; white-space: nowrap; font-size: .8rem; transition: all .25s; flex-shrink: 0; }
+.score-chip.cur { background: rgba(212,170,96,.18); border-color: #d4aa60; }
+.s-dot { width: 10px; height: 10px; border-radius: 50%; }
+.s-name { font-weight: bold; }
+.s-pts { color: #d4aa60; margin-left: 2px; }
+#board-container { flex: 1; overflow: auto; background: radial-gradient(ellipse at center, #142030 0%, #0d1b2a 100%); touch-action: pan-x pan-y; position: relative; }
+#board-svg { display: block; }
+#turn-bar { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: rgba(0,0,0,.55); border-top: 1px solid rgba(255,255,255,.07); flex-shrink: 0; gap: 10px; }
+#tb-name { font-weight: bold; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#tb-instr { font-size: .72rem; color: #6a8aa8; margin-top: 1px; }
+#tb-right { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.btn-eg { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; color: #8a9ab8; font-family: inherit; font-size: .72rem; padding: 4px 10px; cursor: pointer; }
+.btn-eg:hover { border-color: #d4aa60; color: #d4aa60; }
+#tb-count { font-size: .72rem; color: #4a6a80; white-space: nowrap; }
+#timer-display { font-size: .82rem; font-weight: bold; color: #d4aa60; white-space: nowrap; background: rgba(212,170,96,.08); border: 1px solid rgba(212,170,96,.2); border-radius: 6px; padding: 3px 9px; }
+#timer-display.timer-warn { color: #ff7043; border-color: rgba(255,112,67,.5); background: rgba(255,112,67,.1); animation: pulse .8s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+#hand-container { height: 118px; flex-shrink: 0; background: rgba(0,0,0,.65); border-top: 1px solid rgba(255,255,255,.1); overflow-x: auto; overflow-y: hidden; display: flex; align-items: center; gap: 6px; padding: 8px 12px; scrollbar-width: thin; scrollbar-color: rgba(212,170,96,.3) transparent; }
+.hand-tile-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+.hand-tile { width: 83px; height: 95px; cursor: pointer; transition: transform .14s; user-select: none; }
+.hand-tile:hover { transform: translateY(-5px); }
+.hand-tile.sel { transform: translateY(-10px); filter: drop-shadow(0 0 8px rgba(255,255,255,.5)); }
+.btn-hint { font-size: .6rem; padding: 1px 7px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; color: #8a9ab8; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .15s; }
+.btn-hint:hover { border-color: #ffd54f; color: #ffd54f; }
+
+/* ── MODALS ── */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.78); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+.overlay.show { display: flex; }
+.mbox { background: #162030; border: 1px solid rgba(212,170,96,.4); border-radius: 18px; padding: 26px 22px; width: 100%; max-width: 420px; text-align: center; animation: popIn .18s ease-out; max-height: 92dvh; overflow-y: auto; }
+@keyframes popIn { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.mbox h2 { font-size: 1.2rem; color: #d4aa60; margin-bottom: 5px; }
+.msub { font-size: .82rem; color: #7a9ab8; margin-bottom: 16px; }
+.mterm { font-size: 1rem; font-weight: bold; color: #e8dcc8; background: rgba(255,255,255,.05); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; word-break: break-word; }
+.mconn { font-size: .76rem; color: #6a8aa8; margin-bottom: 16px; }
+.fw-list { display: flex; flex-direction: column; gap: 9px; }
+.fw-btn { background: rgba(255,255,255,.04); border: 2px solid rgba(255,255,255,.13); border-radius: 11px; padding: 12px 16px; cursor: pointer; font-family: 'Georgia', serif; text-align: left; transition: all .18s; color: #e8dcc8; }
+.fw-btn:hover { border-color: var(--c); background: rgba(255,255,255,.07); }
+.fn { font-size: 1rem; font-weight: bold; color: var(--c); }
+.fh { font-size: .73rem; color: #7a9ab8; margin-top: 3px; }
+.fw-comp { --c: #64b5f6; } .fw-caus { --c: #ffb74d; } .fw-ccot { --c: #81c784; }
+.ebox { background: rgba(255,255,255,.05); border-radius: 10px; padding: 13px; margin: 12px 0; text-align: left; }
+.eterm { font-size: 1rem; font-weight: bold; word-break: break-word; }
+.efw   { font-size: .82rem; margin-top: 4px; }
+.eneigh { font-size: .74rem; color: #6a8aa8; margin-top: 5px; word-break: break-word; }
+.stem-box { background: rgba(212,170,96,.08); border: 1px solid rgba(212,170,96,.2); border-radius: 8px; padding: 10px 14px; font-size: .78rem; color: #d4aa60; font-style: italic; margin-bottom: 14px; text-align: left; line-height: 1.6; white-space: pre-line; }
+/* SPICE-T */
+.spice-label { font-size: .72rem; color: #7a9ab8; margin-bottom: 7px; text-align: left; }
+.spice-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+.spice-btn { flex: 1; min-width: 40px; padding: 7px 4px; border: 2px solid rgba(255,255,255,.15); border-radius: 8px; background: rgba(255,255,255,.04); color: #9ab8cc; font-family: inherit; font-size: .74rem; cursor: pointer; text-align: center; transition: all .15s; line-height: 1.2; }
+.spice-btn .sb-code { font-size: .9rem; font-weight: bold; display: block; }
+.spice-btn .sb-full { font-size: .55rem; display: block; margin-top: 1px; }
+.spice-btn:hover { border-color: var(--sc); color: var(--sc); }
+.spice-btn.act { border-color: var(--sc); background: color-mix(in srgb, var(--sc) 20%, transparent); color: var(--sc); }
+.spice-s{--sc:#f06292;}.spice-p{--sc:#ef5350;}.spice-i{--sc:#4caf50;}.spice-c{--sc:#ce93d8;}.spice-e{--sc:#ffd54f;}.spice-t{--sc:#40c4ff;}
+/* Appositive */
+.appos-section { margin-bottom: 12px; }
+.appos-label { font-size: .72rem; color: #7a9ab8; margin-bottom: 6px; text-align: left; }
+.appos-row { display: flex; gap: 8px; }
+.appos-btn { flex: 1; padding: 8px; border: 2px solid rgba(255,255,255,.15); border-radius: 9px; background: rgba(255,255,255,.04); color: #9ab8cc; font-family: inherit; font-size: .82rem; cursor: pointer; transition: all .15s; }
+.appos-btn:hover { border-color: #d4aa60; }
+.appos-btn.act-yes { border-color: #66bb6a; background: rgba(102,187,106,.18); color: #66bb6a; }
+.appos-btn.act-no  { border-color: #ef5350; background: rgba(239,83,80,.12); color: #ef5350; }
+/* Vote 3-col */
+.vote-label-text { font-size: .78rem; color: #7a9ab8; margin-bottom: 10px; }
+.vote-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.btn-exc { background: linear-gradient(135deg,#f57f17,#f9a825); border: none; border-radius: 11px; color: #1a0a00; font-family: inherit; font-size: .82rem; padding: 12px 6px; cursor: pointer; transition: transform .1s; line-height: 1.3; }
+.btn-exc:hover { transform: scale(1.04); }
+.btn-good { background: linear-gradient(135deg,#2e7d32,#43a047); border: none; border-radius: 11px; color: #fff; font-family: inherit; font-size: .82rem; padding: 12px 6px; cursor: pointer; transition: transform .1s; line-height: 1.3; }
+.btn-good:hover { transform: scale(1.04); }
+.btn-cha { background: linear-gradient(135deg,#b71c1c,#d32f2f); border: none; border-radius: 11px; color: #fff; font-family: inherit; font-size: .82rem; padding: 12px 6px; cursor: pointer; transition: transform .1s; line-height: 1.3; }
+.btn-cha:hover { transform: scale(1.04); }
+.btn-disabled { opacity: .32; pointer-events: none; }
+.r-icon { font-size: 3rem; }
+.r-pts  { font-size: 2.2rem; color: #d4aa60; font-weight: bold; margin: 4px 0; }
+.r-msg  { font-size: .82rem; color: #7a9ab8; margin-bottom: 20px; }
+.btn-next { background: linear-gradient(135deg,#d4aa60,#b07830); border: none; border-radius: 11px; color: #0d1b2a; font-family: 'Georgia',serif; font-size: 1rem; font-weight: bold; padding: 13px; cursor: pointer; width: 100%; }
+/* Hint */
+.hint-def-hidden { text-align: center; padding: 18px; background: rgba(255,255,255,.04); border-radius: 10px; margin: 10px 0; }
+.hint-def-hidden-text { font-size: .82rem; color: #4a6a80; font-style: italic; }
+.hint-def-reveal { background: rgba(255,213,79,.07); border: 1px solid rgba(255,213,79,.25); border-radius: 10px; padding: 14px; font-size: .84rem; color: #e8dcc8; line-height: 1.6; text-align: left; margin: 10px 0; display: none; }
+.hint-def-reveal.shown { display: block; }
+.hint-warn { font-size: .74rem; color: #ff8a65; margin-bottom: 12px; }
+.hint-themes { display: flex; gap: 5px; flex-wrap: wrap; margin: 8px 0; }
+.hint-theme-tag { font-size: .65rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+.btn-hint-reveal { background: linear-gradient(135deg,#d4aa60,#b07830); border: none; border-radius: 10px; color: #0d1b2a; font-family: inherit; font-size: .92rem; font-weight: bold; padding: 11px; cursor: pointer; width: 100%; margin-bottom: 8px; }
+.btn-hint-cancel { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); border-radius: 10px; color: #8a9ab8; font-family: inherit; font-size: .88rem; padding: 9px; cursor: pointer; width: 100%; }
+
+/* ── END ── */
+#screen-end { align-items: center; padding: 32px 16px 48px; gap: 18px; background: linear-gradient(150deg,#0d1b2a,#1a2d42); }
+.end-hero { text-align: center; }
+.end-hero h1 { font-size: 2rem; color: #d4aa60; }
+.end-hero p  { color: #7a9ab8; margin-top: 4px; font-size: .88rem; }
+.podium { width: 100%; max-width: 520px; background: rgba(255,255,255,.04); border: 1px solid rgba(212,170,96,.25); border-radius: 14px; padding: 18px; }
+.pr { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
+.pr:last-child { border-bottom: none; }
+.pr-rank { font-size: 1.5rem; width: 34px; text-align: center; flex-shrink: 0; }
+.pr-info { flex: 1; min-width: 0; }
+.pr-name { font-weight: bold; font-size: .93rem; }
+.pr-pts  { color: #d4aa60; font-size: .8rem; margin-top: 2px; }
+.pr-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.badge { font-size: .62rem; padding: 2px 7px; border-radius: 10px; font-weight: bold; }
+.b-comp{background:rgba(100,181,246,.18);color:#64b5f6;}.b-caus{background:rgba(255,183,77,.18);color:#ffb74d;}.b-ccot{background:rgba(129,199,132,.18);color:#81c784;}
+.b-s{background:rgba(240,98,146,.18);color:#f06292;}.b-p{background:rgba(239,83,80,.18);color:#ef5350;}.b-i{background:rgba(76,175,80,.18);color:#4caf50;}
+.b-c{background:rgba(206,147,216,.18);color:#ce93d8;}.b-e{background:rgba(255,213,79,.18);color:#ffd54f;}.b-t{background:rgba(64,196,255,.18);color:#40c4ff;}
+.btn-again { background: linear-gradient(135deg,#d4aa60,#b07830); border: none; border-radius: 12px; color: #0d1b2a; font-family: 'Georgia',serif; font-size: 1.1rem; font-weight: bold; padding: 14px; cursor: pointer; width: 100%; max-width: 520px; box-shadow: 0 4px 20px rgba(212,170,96,.3); }
+
+/* ── INTRO BOSS FIGHT ── */
+#screen-boss { align-items: center; padding: 0; background: #0a0d1a; overflow-y: auto; }
+.boss-header { text-align: center; padding: 20px 16px 12px; background: linear-gradient(180deg, #0a0d1a, #100820); border-bottom: 1px solid rgba(206,147,216,.2); width: 100%; flex-shrink: 0; }
+.boss-header h1 { font-size: 1.5rem; color: #ce93d8; letter-spacing:.04em; }
+.boss-header p { font-size: .78rem; color: #7a9ab8; margin-top: 3px; }
+/* Mini board view */
+#boss-board-zone { width: 100%; background: #0d1b2a; border-bottom: 2px solid rgba(206,147,216,.2); overflow: hidden; position: relative; flex-shrink: 0; }
+#boss-board-mini { width: 100%; overflow: auto; cursor: grab; }
+#boss-board-mini:active { cursor: grabbing; }
+#boss-board-mini svg { display: block; }
+.boss-board-label { position: absolute; top: 6px; left: 10px; font-size: .65rem; color: rgba(206,147,216,.6); letter-spacing:.06em; text-transform:uppercase; pointer-events:none; }
+.boss-zoom-bar { display:flex; align-items:center; gap:6px; padding:4px 10px; background:rgba(0,0,0,.4); border-top:1px solid rgba(206,147,216,.15); }
+.boss-zoom-btn { background:rgba(206,147,216,.18); border:1px solid rgba(206,147,216,.35); color:#ce93d8; font-size:1.1rem; line-height:1; padding:2px 10px 3px; border-radius:6px; cursor:pointer; flex-shrink:0; }
+.boss-zoom-btn:hover { background:rgba(206,147,216,.32); }
+.boss-zoom-label { font-size:.72rem; color:rgba(206,147,216,.7); flex:1; text-align:center; }
+.boss-scroll-hint { position: absolute; bottom: 4px; right: 8px; font-size: .6rem; color: rgba(206,147,216,.4); pointer-events:none; }
+/* Boss content */
+.boss-content { width: 100%; max-width: 560px; padding: 16px 16px 48px; display: flex; flex-direction: column; gap: 14px; }
+.boss-prompt-box { background: rgba(206,147,216,.08); border: 2px solid rgba(206,147,216,.3); border-radius: 12px; padding: 14px; }
+.boss-prompt-box h3 { font-size: .7rem; color: #ce93d8; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+.boss-ap-prompt { font-size: .84rem; color: #e8dcc8; line-height: 1.6; font-style: italic; }
+.boss-section { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 14px; }
+.boss-section h3 { font-size: .7rem; color: #d4aa60; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; }
+.t5-row { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.07); align-items: flex-start; }
+.t5-row:last-child { border-bottom: none; }
+.t5-label { font-size: .72rem; font-weight: bold; color: #d4aa60; min-width: 30px; flex-shrink: 0; }
+.t5-desc { font-size: .72rem; color: #8a9ab8; flex: 1; line-height: 1.4; }
+.thesis-formula { background: rgba(212,170,96,.08); border: 1px solid rgba(212,170,96,.3); border-radius: 9px; padding: 12px 14px; font-size: .84rem; color: #d4aa60; font-style: italic; line-height: 1.7; text-align: center; }
+.thesis-formula strong { color: #e8dcc8; font-style: normal; }
+.btn-copy-prompt { background: rgba(206,147,216,.12); border: 1px solid rgba(206,147,216,.3); border-radius: 9px; color: #ce93d8; font-family: inherit; font-size: .82rem; padding: 9px 16px; cursor: pointer; transition: all .15s; }
+.btn-copy-prompt:hover { background: rgba(206,147,216,.22); }
+.btn-to-scores { background: linear-gradient(135deg,#d4aa60,#b07830); border: none; border-radius: 11px; color: #0d1b2a; font-family: inherit; font-size: 1rem; font-weight: bold; padding: 13px; cursor: pointer; width: 100%; }
+
+</style>
 </head>
 <body>
-    <h1>Welcome to the Hexagonal Thinking Game</h1>
-    <p>Instructions: Connect hexagons to create a flow of ideas.</p>
-    <div id="game-board"></div>
-    <script src="script.js"></script>
+
+<!-- ═══ SETUP ═══ -->
+<div class="screen active" id="screen-setup">
+  <div class="setup-hero">
+    <h1>⬡ Hexagonal Thinking</h1>
+    <p>AP World History &nbsp;·&nbsp; Comparison &nbsp;·&nbsp; Causation &nbsp;·&nbsp; CCOT</p>
+  </div>
+  <div class="setup-card">
+    <h2>Game Mode</h2>
+    <div class="mode-tabs">
+      <button class="mode-tab sel" id="tab-unit" onclick="setModeTab('unit')"><span class="mt-icon">📚</span>Unit Mode</button>
+      <button class="mode-tab" id="tab-period" onclick="setModeTab('period')"><span class="mt-icon">🗓</span>Period Mode</button>
+      <button class="mode-tab" id="tab-leq" onclick="setModeTab('leq')"><span class="mt-icon">✍️</span>LEQ Mode</button>
+    </div>
+    <div id="mode-unit">
+      <div class="sel-grid cols-3">
+        <button class="sel-btn sel" data-key="1" onclick="selectContent('1')"><span class="sb-top">Unit 1</span><span class="sb-sub">Global Tapestry<br>1200–1450</span></button>
+        <button class="sel-btn" data-key="2" onclick="selectContent('2')"><span class="sb-top">Unit 2</span><span class="sb-sub">Networks of Exchange<br>1200–1450</span></button>
+        <button class="sel-btn" data-key="3" onclick="selectContent('3')"><span class="sb-top">Unit 3</span><span class="sb-sub">Land-Based Empires<br>1450–1750</span></button>
+        <button class="sel-btn" data-key="4" onclick="selectContent('4')"><span class="sb-top">Unit 4</span><span class="sb-sub">Maritime Empires<br>1450–1750</span></button>
+        <button class="sel-btn" data-key="5" onclick="selectContent('5')"><span class="sb-top">Unit 5</span><span class="sb-sub">Revolutions<br>1750–1900</span></button>
+        <button class="sel-btn" data-key="6" onclick="selectContent('6')"><span class="sb-top">Unit 6</span><span class="sb-sub">Imperialism<br>1750–1900</span></button>
+        <button class="sel-btn" data-key="7" onclick="selectContent('7')"><span class="sb-top">Unit 7</span><span class="sb-sub">Global Conflict<br>1900–Present</span></button>
+        <button class="sel-btn" data-key="8" onclick="selectContent('8')"><span class="sb-top">Unit 8</span><span class="sb-sub">Cold War &amp; Decolonization<br>1900–Present</span></button>
+        <button class="sel-btn" data-key="9" onclick="selectContent('9')"><span class="sb-top">Unit 9</span><span class="sb-sub">Globalization<br>1900–Present</span></button>
+      </div>
+    </div>
+    <div id="mode-period" style="display:none">
+      <div class="sel-grid cols-2">
+        <button class="sel-btn" data-key="p1" onclick="selectContent('p1')"><span class="sb-top">Period 1</span><span class="sb-sub">Units 1+2 · 1200–1450</span></button>
+        <button class="sel-btn" data-key="p2" onclick="selectContent('p2')"><span class="sb-top">Period 2</span><span class="sb-sub">Units 3+4 · 1450–1750</span></button>
+        <button class="sel-btn" data-key="p3" onclick="selectContent('p3')"><span class="sb-top">Period 3</span><span class="sb-sub">Units 5+6 · 1750–1900</span></button>
+        <button class="sel-btn" data-key="p4" onclick="selectContent('p4')"><span class="sb-top">Period 4</span><span class="sb-sub">Units 7+8+9 · 1900–Present</span></button>
+      </div>
+    </div>
+    <div id="mode-leq" style="display:none">
+      <div class="sel-grid cols-1">
+        <button class="sel-btn" data-key="leq1" onclick="selectContent('leq1')"><span class="sb-top">LEQ Option 1 — Periods 1 &amp; 2</span><span class="sb-sub">Units 1–4 · 1200–1750</span></button>
+        <button class="sel-btn" data-key="leq2" onclick="selectContent('leq2')"><span class="sb-top">LEQ Option 2 — Periods 2 &amp; 3</span><span class="sb-sub">Units 3–6 · 1450–1900</span></button>
+        <button class="sel-btn" data-key="leq3" onclick="selectContent('leq3')"><span class="sb-top">LEQ Option 3 — Periods 3 &amp; 4</span><span class="sb-sub">Units 5–9 · 1750–Present</span></button>
+      </div>
+    </div>
+    <div class="sel-summary" id="sel-summary">Unit 1 · Global Tapestry (1200–1450)</div>
+  </div>
+
+  <div class="setup-card" style="padding:12px 18px;">
+    <button class="chaos-btn" id="chaos-btn" data-key="chaos" onclick="selectContent('chaos')">
+      <span class="cb-icon">💥</span>
+      <span class="cb-title">ENTIRE COURSE CHAOS MODE</span>
+      <span class="cb-sep"></span>
+      <span class="cb-sub">All 9 Units · All Periods · Not for the faint-hearted</span>
+    </button>
+  </div>
+
+  <div class="setup-card">
+    <h2>Game Timer</h2>
+    <div class="timer-row">
+      <button class="timer-opt sel" data-secs="0" onclick="selectTimer(0)">⏳ No Limit</button>
+      <button class="timer-opt" data-secs="1200" onclick="selectTimer(1200)">⏱ 20 min</button>
+      <button class="timer-opt" data-secs="1800" onclick="selectTimer(1800)">⏱ 30 min</button>
+    </div>
+  </div>
+
+  <div class="setup-card">
+    <h2>Players</h2>
+    <div id="solo-note" style="display:none;font-size:.75rem;background:rgba(66,165,245,.1);border:1px solid rgba(66,165,245,.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;color:#42a5f5;">
+      📖 Solo Practice Mode — definitions are free, self-assess your explanations.
+    </div>
+    <div class="player-list" id="player-list"></div>
+    <button class="btn-add" id="btn-add" onclick="addPlayer()">+ Add Player</button>
+  </div>
+
+  <button class="btn-start" onclick="startGame()">Begin Game</button>
+  <button class="btn-rules" onclick="showM('m-rules')">📋 How to Play</button>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div class="screen" id="screen-game">
+  <div id="scoreboard"></div>
+  <div id="board-container"><svg id="board-svg"></svg></div>
+  <div id="turn-bar">
+    <div id="tb-left">
+      <div id="tb-name"></div>
+      <div id="tb-instr">Select a tile below</div>
+    </div>
+    <div id="tb-right">
+      <span id="timer-display" style="display:none"></span>
+      <div id="tb-count"></div>
+      <button class="btn-eg" onclick="confirmEnd()">End Game</button>
+    </div>
+  </div>
+  <div id="hand-container"></div>
+</div>
+
+<!-- ═══ INTRO BOSS FIGHT ═══ -->
+<div class="screen" id="screen-boss">
+  <div class="boss-header">
+    <h1>🏛 Intro Boss Level</h1>
+    <p>Use your board to write Contextualization → Thesis</p>
+  </div>
+
+  <!-- Scrollable mini board -->
+  <div id="boss-board-zone" style="height:220px;">
+    <div id="boss-board-mini"></div>
+    <div class="boss-board-label">YOUR GAME BOARD</div>
+  </div>
+  <div class="boss-zoom-bar">
+    <button class="boss-zoom-btn" onclick="bossZoom(-1)">−</button>
+    <span class="boss-zoom-label" id="boss-zoom-label">100%</span>
+    <button class="boss-zoom-btn" onclick="bossZoom(1)">+</button>
+  </div>
+
+  <div class="boss-content">
+    <!-- Generated AP prompt -->
+    <div class="boss-prompt-box">
+      <h3>🎯 Your AP-Style Prompt</h3>
+      <div class="boss-ap-prompt" id="boss-ap-prompt"></div>
+      <div style="margin-top:10px;">
+        <button class="btn-copy-prompt" id="btn-copy-prompt" onclick="copyBossPrompt()">📋 Copy Prompt</button>
+      </div>
+    </div>
+
+    <!-- T-5 scaffold -->
+    <div class="boss-section">
+      <h3>📐 Step 1 — Contextualization: T-5 Lift-Off</h3>
+      <div class="t5-row"><div class="t5-label">T-5</div><div class="t5-desc"><strong style="color:#e8dcc8">Broad Trend</strong> — Describe a global or hemispheric trend ~100 years <em>before</em> the prompt's timeframe.</div></div>
+      <div class="t5-row"><div class="t5-label">T-4</div><div class="t5-desc"><strong style="color:#e8dcc8">Major Powers</strong> — Identify key empires or regions relevant to the prompt (~100 years before).</div></div>
+      <div class="t5-row"><div class="t5-label">T-3</div><div class="t5-desc"><strong style="color:#e8dcc8">Motive / Mechanism</strong> — State one driving cause of the T-5 trend. Use a SPICE-T theme from your board.</div></div>
+      <div class="t5-row"><div class="t5-label">T-2</div><div class="t5-desc"><strong style="color:#e8dcc8">Trigger Event</strong> — Name one concrete event right before the prompt's timeframe.</div></div>
+      <div class="t5-row"><div class="t5-label">T-1</div><div class="t5-desc"><strong style="color:#e8dcc8">Bridge</strong> — Explain how T-2 created the historical conditions addressed in the prompt.</div></div>
+      <div style="margin-top:10px;font-size:.72rem;color:#4a6a80;font-style:italic;">✓ Five sentences that move from broad background → specific prompt topic = contextualization point.</div>
+    </div>
+
+    <!-- Thesis formula -->
+    <div class="boss-section">
+      <h3>✍️ Step 2 — Thesis Construction</h3>
+      <p style="font-size:.76rem;color:#7a9ab8;margin-bottom:10px;">Your thesis must: (1) respond to the prompt, (2) take a defensible position, (3) establish a line of reasoning. Draw on the connections and SPICE-T themes visible on your board.</p>
+      <div class="thesis-formula">
+        "Although <strong>[counterargument / what partially happened]</strong>,<br>
+        because <strong>[reason 1 from board]</strong> and <strong>[reason 2 from board]</strong>,<br>
+        therefore <strong>[your main claim responding to the prompt]</strong>."
+      </div>
+      <div style="margin-top:10px;font-size:.72rem;color:#4a6a80;font-style:italic;">Tip: use the most-connected terms on your board as your reasons. The SPICE-T dots show which themes dominate.</div>
+    </div>
+
+    <button class="btn-to-scores" onclick="proceedToScores()">See Final Scores →</button>
+  </div>
+</div>
+
+<!-- ═══ END ═══ -->
+<div class="screen" id="screen-end">
+  <div class="end-hero">
+    <h1>🏛 Game Over</h1>
+    <p id="end-sub"></p>
+  </div>
+  <div class="podium" id="podium"></div>
+  <button class="btn-again" onclick="resetGame()">Play Again</button>
+</div>
+
+<!-- MODAL: Framework -->
+<div class="overlay" id="m-fw">
+  <div class="mbox">
+    <h2>Choose Your Framework</h2>
+    <p class="msub">How will you justify this connection?</p>
+    <div class="mterm" id="fw-term"></div>
+    <div class="mconn" id="fw-conn"></div>
+    <div class="fw-list">
+      <button class="fw-btn fw-comp" onclick="selectFW('comparison')"><div class="fn">Comparison</div><div class="fh">How are these similar or different across time or place?</div></button>
+      <button class="fw-btn fw-caus" onclick="selectFW('causation')"><div class="fn">Causation</div><div class="fh">How did one cause, enable, or lead to the other?</div></button>
+      <button class="fw-btn fw-ccot" onclick="selectFW('ccot')"><div class="fn">CCOT</div><div class="fh">What continued or changed over time between these?</div></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Explain + SPICE-T + Appositive + Vote -->
+<div class="overlay" id="m-exp">
+  <div class="mbox">
+    <h2>Explain to Your Group</h2>
+    <div class="ebox">
+      <div class="eterm" id="exp-term"></div>
+      <div class="efw"   id="exp-fw"></div>
+      <div class="eneigh" id="exp-neigh"></div>
+    </div>
+    <div class="stem-box" id="exp-stem"></div>
+    <div class="spice-label">1. Select SPICE-T theme(s) — required before voting:</div>
+    <div class="spice-row">
+      <button class="spice-btn spice-s" data-code="S" onclick="toggleSPICE('S')"><span class="sb-code">S</span><span class="sb-full">Social</span></button>
+      <button class="spice-btn spice-p" data-code="P" onclick="toggleSPICE('P')"><span class="sb-code">P</span><span class="sb-full">Political</span></button>
+      <button class="spice-btn spice-i" data-code="I" onclick="toggleSPICE('I')"><span class="sb-code">I</span><span class="sb-full">Environ.</span></button>
+      <button class="spice-btn spice-c" data-code="C" onclick="toggleSPICE('C')"><span class="sb-code">C</span><span class="sb-full">Cultural</span></button>
+      <button class="spice-btn spice-e" data-code="E" onclick="toggleSPICE('E')"><span class="sb-code">E</span><span class="sb-full">Economic</span></button>
+      <button class="spice-btn spice-t" data-code="T" onclick="toggleSPICE('T')"><span class="sb-code">T</span><span class="sb-full">Tech.</span></button>
+    </div>
+    <div class="appos-section">
+      <div class="appos-label">2. Did the explanation include an appositive detail? <span style="font-size:.65rem;color:#4a6a80">(required for ✓✓✓ Excellent)</span></div>
+      <div class="appos-row">
+        <button class="appos-btn" data-appos="yes" onclick="toggleAppositive(true)">✓ Yes — specific detail added</button>
+        <button class="appos-btn" data-appos="no"  onclick="toggleAppositive(false)">✗ No — connection only</button>
+      </div>
+    </div>
+    <div class="vote-label-text" id="vote-label">After the explanation, the group decides:</div>
+    <div class="vote-row-3">
+      <button class="btn-exc vote-btn btn-disabled" data-vote="excellent" onclick="vote('excellent')">✓✓✓<br>Excellent<br><small>+3</small></button>
+      <button class="btn-good vote-btn btn-disabled" data-vote="good" onclick="vote('good')">✓<br>Good<br><small>+1</small></button>
+      <button class="btn-cha vote-btn btn-disabled" data-vote="challenge" onclick="vote('challenge')">✗<br>Challenge<br><small>0 pts</small></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Result -->
+<div class="overlay" id="m-res">
+  <div class="mbox">
+    <div class="r-icon" id="res-icon"></div>
+    <div class="r-pts"  id="res-pts"></div>
+    <div class="r-msg"  id="res-msg"></div>
+    <button class="btn-next" onclick="nextTurn()">Next Player →</button>
+  </div>
+</div>
+
+<!-- MODAL: Hint -->
+<div class="overlay" id="m-hint">
+  <div class="mbox">
+    <h2>📖 Definition Hint</h2>
+    <div class="mterm" id="hint-term"></div>
+    <div class="hint-themes" id="hint-themes"></div>
+    <div class="hint-def-hidden" id="hint-def-hidden">
+      <div class="hint-def-hidden-text">🔒 Definition hidden<br><span style="font-size:.7rem">Click Reveal to unlock</span></div>
+    </div>
+    <div class="hint-def-reveal" id="hint-def-reveal"></div>
+    <div class="hint-warn" id="hint-warn">Using this hint costs 1 point from your score.</div>
+    <span id="hint-pending-term" style="display:none"></span>
+    <button class="btn-hint-reveal" id="hint-reveal-btn" onclick="revealHint()">📖 Reveal Definition (−1 pt)</button>
+    <button class="btn-hint-cancel" id="hint-cancel-btn" onclick="closeHint()">✕ Close (No Cost)</button>
+  </div>
+</div>
+
+<!-- Rules Modal -->
+<div class="overlay" id="m-rules">
+  <div class="mbox" style="max-height:88vh;overflow-y:auto;">
+    <h2>📋 How to Play</h2>
+
+    <div class="rules-section">
+      <h3>Goal</h3>
+      <p>Build a connected map of AP World History terms on the hexagonal board. Earn the most points by explaining how terms connect using historical thinking skills.</p>
+    </div>
+
+    <div class="rules-section">
+      <h3>On Your Turn</h3>
+      <ul>
+        <li>Pick a tile from your hand and place it on the board — it must touch at least one tile already there.</li>
+        <li>Choose a thinking framework: <strong>Comparison</strong>, <strong>Causation</strong>, or <strong>CCOT</strong>.</li>
+        <li>Explain out loud how your tile connects to its neighbour using that framework.</li>
+        <li>Identify the <strong>SPICE-T theme</strong> your connection falls under.</li>
+        <li>For the highest score, add an <strong>appositive detail</strong> — a short phrase that gives extra historical context about one of the terms.</li>
+      </ul>
+    </div>
+
+    <div class="rules-section">
+      <h3>Group Vote</h3>
+      <ul>
+        <li><strong>✓✓✓ Excellent (+3 pts)</strong> — Strong explanation with a SPICE-T theme AND an appositive detail.</li>
+        <li><strong>✓ Good (+1 pt)</strong> — Valid explanation with a SPICE-T theme.</li>
+        <li><strong>✗ Challenge (0 pts)</strong> — Explanation needs more historical support.</li>
+      </ul>
+    </div>
+
+    <div class="rules-section">
+      <h3>Frameworks</h3>
+      <ul>
+        <li><strong>Comparison</strong> — How are the two terms similar or different across societies?</li>
+        <li><strong>Causation</strong> — How does one term cause or result from the other?</li>
+        <li><strong>CCOT</strong> — How did something change or stay the same over time?</li>
+      </ul>
+    </div>
+
+    <div class="rules-section">
+      <h3>Hints</h3>
+      <p>Tap a tile already on the board to see its SPICE-T themes for free. Tap a tile in your hand and choose <strong>Reveal Definition</strong> to see its full definition — this costs <strong>1 point</strong>. In Solo Mode, hints are always free.</p>
+    </div>
+
+    <div class="rules-section">
+      <h3>SPICE-T Themes</h3>
+      <div class="rules-spice">
+        <span style="background:#1a3a4a;color:#4fc3f7;">S — Social</span>
+        <span style="background:#1a2e1a;color:#81c784;">P — Political</span>
+        <span style="background:#1a2e20;color:#a5d6a7;">I — Environment</span>
+        <span style="background:#2e1a2e;color:#ce93d8;">C — Cultural</span>
+        <span style="background:#2e2a1a;color:#ffd54f;">E — Economic</span>
+        <span style="background:#2e1a1a;color:#ef9a9a;">T — Technological</span>
+      </div>
+    </div>
+
+    <div class="rules-section">
+      <h3>Intro Boss Level</h3>
+      <p>When the game ends, everyone works together on the Intro Boss Level. Use your hexagonal map to write a <strong>Contextualization</strong> (T-5 method) and a <strong>Thesis</strong> (Although … because … therefore …) in response to the AP-style prompt generated from your board.</p>
+    </div>
+
+    <button class="btn-cancel" onclick="hideM('m-rules')" style="margin-top:14px;">✕ Close</button>
+  </div>
+</div>
+
+<script>
+const DEFS = {
+  "Baghdad House of Wisdom":{"def":"Abbasid-era Baghdad center where scholars translated Greek, Persian, and Indian texts, advancing Islamic science.","themes":["C", "T"]},
+  "Buddhism":{"def":"Religion founded by Siddhartha Gautama emphasizing the Four Noble Truths and Eightfold Path to end suffering.","themes":["C", "S"]},
+  "Buddhist Monasticism":{"def":"Practice of monks living in monasteries, preserving Buddhist texts and spreading the faith across Asia.","themes":["C", "S"]},
+  "Champa Rice":{"def":"Fast-ripening Vietnamese rice that doubled Song Dynasty harvests and fueled a population boom.","themes":["I", "E"]},
+  "Chinampas":{"def":"Aztec raised-field gardens built on lake shallows near Tenochtitlan to dramatically increase crop yields.","themes":["I", "T"]},
+  "Civil Service Exam":{"def":"Chinese meritocratic test selecting government officials by mastery of Confucian classics.","themes":["P", "S"]},
+  "Confucianism":{"def":"Chinese philosophy emphasizing filial piety, social hierarchy, and moral self-cultivation; shaped East Asian governance.","themes":["C", "P", "S"]},
+  "Delhi Sultanate":{"def":"Turkic Muslim sultanate (1206–1526) ruling northern India, introducing Islamic law to the subcontinent.","themes":["P", "C"]},
+  "Feudalism":{"def":"European and Japanese land-for-military-service system structuring relationships among lords, vassals, and serfs.","themes":["P", "S", "E"]},
+  "Filial Piety":{"def":"Confucian virtue of deep respect and obedience owed by children to parents and ancestors.","themes":["C", "S"]},
+  "Grand Canal":{"def":"7th-century Chinese waterway linking north and south China, enabling grain transport and economic integration.","themes":["E", "T"]},
+  "Hindu Caste System":{"def":"Hereditary social hierarchy dividing Hindu society into varnas from priests to untouchables.","themes":["S", "C"]},
+  "Islam":{"def":"Monotheistic religion founded by Muhammad in 7th-century Arabia; spread rapidly across Asia, Africa, and Europe.","themes":["C", "S"]},
+  "Judaism":{"def":"Monotheistic religion of the Hebrew people, with diaspora merchant communities facilitating Eurasian trade.","themes":["C", "S", "E"]},
+  "Mandate of Heaven":{"def":"Chinese belief that rulers hold divine right to govern but may lose it through incompetence or immorality.","themes":["P", "C"]},
+  "Muslim Translation Movement":{"def":"8th–10th-century Abbasid project translating ancient Greek, Persian, and Indian texts into Arabic.","themes":["C", "T"]},
+  "Maize":{"def":"Native American staple crop (corn) that transformed global agriculture after the Columbian Exchange.","themes":["I", "E"]},
+  "Neo-Confucianism":{"def":"Song Dynasty synthesis of Confucianism with Buddhist and Daoist ideas; emphasized rationalism and social order.","themes":["C", "P"]},
+  "Paper Money":{"def":"Chinese Song Dynasty innovation replacing heavy coins; facilitated large commercial transactions.","themes":["E", "T"]},
+  "Serfdom":{"def":"System binding European and Russian peasants to land, performing labor for lords in exchange for protection.","themes":["S", "E", "P"]},
+  "Terrace Farming":{"def":"Agricultural technique cutting flat platforms into hillsides to prevent erosion and expand arable land.","themes":["I", "T", "E"]},
+  "Vijayanagara Empire":{"def":"Powerful Hindu empire in southern India (1336–1646) that resisted Muslim expansion and fostered trade.","themes":["P", "E", "C"]},
+  "Little Ice Age":{"def":"Period of global cooling (c.1300–1850) disrupting agriculture and contributing to famine and political unrest.","themes":["I", "P"]},
+  "Compass":{"def":"Chinese navigational invention using magnetized needles that revolutionized maritime travel.","themes":["T", "E"]},
+  "Umayyad Dynasty":{"def":"First major Islamic caliphate (661–750) expanding from Spain to Central Asia; fell to the Abbasids.","themes":["P", "C"]},
+  "Song Dynasty":{"def":"Chinese dynasty (960–1279) known for economic prosperity, technological innovation, and urbanization.","themes":["E", "T", "P"]},
+  "Abbasid Caliphate":{"def":"Islamic golden-age dynasty (750–1258) centered in Baghdad, sponsoring scholarship and trans-Eurasian trade.","themes":["P", "C", "E"]},
+  "Sufism":{"def":"Mystical branch of Islam emphasizing personal devotion to God through poetry and ritual; aided conversion.","themes":["C", "S"]},
+  "Mamluk Sultanate":{"def":"Military slave dynasty ruling Egypt and Syria (1250–1517) that repelled the Mongols.","themes":["P", "C"]},
+  "Ethiopia":{"def":"Christian East African kingdom (Solomonid dynasty) that maintained independence and controlled Red Sea trade.","themes":["P", "C", "E"]},
+  "Khmer Empire":{"def":"Southeast Asian empire (802–1431) based at Angkor Wat, controlling rice agriculture and regional trade.","themes":["P", "I", "E"]},
+  "Maya City-States":{"def":"Network of independent Mesoamerican cities featuring monumental architecture, calendars, and writing.","themes":["P", "C", "T"]},
+  "Mesa Verde":{"def":"Ancestral Puebloan cliff-dwelling community in the American Southwest adapting to arid environments.","themes":["I", "C", "T"]},
+  "Mita System":{"def":"Inca labor tribute requiring commoners to work on state projects in exchange for food and goods.","themes":["P", "E", "S"]},
+  "Griots":{"def":"West African oral historians who preserved and transmitted cultural traditions and genealogies.","themes":["C", "S"]},
+  "Manorial System":{"def":"Medieval European economic system organizing agricultural labor on self-sufficient noble estates.","themes":["E", "S", "P"]},
+  "Black Plague":{"def":"Catastrophic pandemic (1347–1351) killing ~one-third of Europe, reshaping labor markets and society.","themes":["I", "S", "E"]},
+  "Jizya Tax":{"def":"Poll tax levied on non-Muslims in Islamic states in exchange for protection and religious freedom.","themes":["P", "E", "S"]},
+  "Tang Dynasty":{"def":"Chinese dynasty (618–907) known for cosmopolitan culture, Silk Road trade, and powerful central government.","themes":["P", "C", "E"]},
+  "Srivijaya Empire":{"def":"Maritime Buddhist empire in Southeast Asia (7th–13th c.) controlling the Strait of Malacca and Indian Ocean trade.","themes":["E", "P", "C"]},
+  "Al-Andalus":{"def":"Muslim-ruled Iberian Peninsula (711–1492) that became a center of Islamic learning and cultural exchange.","themes":["C", "P", "E"]},
+  "Seljuk Empire":{"def":"Turkic Muslim empire (1037–1194) controlling Central Asia and sparking the Crusades through conquest of Jerusalem.","themes":["P", "C", "E"]},
+  "Hinduism":{"def":"Ancient Indian religion emphasizing dharma, karma, and reincarnation; shaped South Asian culture for millennia.","themes":["C", "S"]},
+  "Hausa Kingdoms":{"def":"West African city-states known for trans-Saharan trade, Islam, and skilled craft production.","themes":["E", "C", "P"]},
+  "Sukhothai Kingdom":{"def":"Early Thai kingdom (13th–15th c.) that adopted Theravada Buddhism and developed Thai script.","themes":["P", "C"]},
+  "Inca Empire":{"def":"Largest pre-Columbian empire in the Americas, governing via mit\'a labor tribute and quipu record-keeping.","themes":["P", "E", "T"]},
+  "Great Zimbabwe":{"def":"Large stone-walled city in southern Africa (11th–15th c.) demonstrating sophisticated political and economic power.","themes":["P", "E"]},
+  "Roman Catholic Church":{"def":"Western Christian institution dominating European politics, culture, and education in the medieval period.","themes":["C", "P", "S"]},
+  "Mali Empire":{"def":"West African empire (13th–15th c.) controlling trans-Saharan gold and salt trade; home of Mansa Musa.","themes":["E", "P"]},
+  "Mansa Musa":{"def":"Emperor of Mali (1312–1337) whose legendary 1324 pilgrimage to Mecca displayed West African wealth.","themes":["E", "P", "C"]},
+  "Five Pillars of Islam":{"def":"Core religious duties of Muslims: Shahada, Salat, Zakat, Sawm, and Hajj.","themes":["C", "S"]},
+  "Tale of Genji":{"def":"11th-century Japanese novel by Lady Murasaki Shikibu, considered the world\'s first novel.","themes":["C", "S"]},
+  "The Crusades":{"def":"Series of religious wars (1095–1291) by European Christians to control the Holy Land; accelerated trade.","themes":["P", "C", "E"]},
+  "Four Noble Truths":{"def":"Buddhist teaching that life involves suffering, suffering has a cause, it can end, and the Eightfold Path leads there.","themes":["C"]},
+  "Samurai":{"def":"Japanese warrior aristocrats bound by a code of loyalty (bushido) serving daimyo lords.","themes":["P", "S", "C"]},
+  "Patriarchy":{"def":"Social system in which men hold primary power in family, political, and social structures.","themes":["S", "P"]},
+  "Silk Roads":{"def":"Ancient overland and maritime networks connecting China, Central Asia, the Middle East, and Europe.","themes":["E", "C", "T"]},
+  "Eightfold Path":{"def":"Buddhist guide of eight practices in ethics, meditation, and wisdom leading to the end of suffering.","themes":["C"]},
+  "Bureaucracy":{"def":"System of trained officials managing government functions; central to Chinese and Islamic statecraft.","themes":["P", "T"]},
+  "Guilds":{"def":"Medieval European associations of craftsmen or merchants regulating trade standards and apprenticeships.","themes":["E", "S"]},
+  "Syncretic Faiths":{"def":"Religions blending elements from multiple traditions, arising at cultural crossroads globally.","themes":["C", "S"]},
+  "Daimyo":{"def":"Powerful Japanese feudal lords controlling land and samurai armies during the feudal period.","themes":["P", "S"]},
+  "Shogun":{"def":"Military ruler of Japan who held real power while the emperor served as a figurehead.","themes":["P"]},
+  "Scholar-Gentry":{"def":"Chinese educated elite who passed the civil service exam and staffed the imperial bureaucracy.","themes":["P", "S"]},
+  "Indian Ocean Trade":{"def":"Maritime network connecting East Africa, the Middle East, India, and Southeast Asia via monsoon winds.","themes":["E", "T"]},
+  "Bhakti Movement":{"def":"Hindu devotional movement emphasizing personal love of God, promoting social equality across castes.","themes":["C", "S"]},
+  "Rajput Kingdoms":{"def":"Collection of Hindu warrior-clan kingdoms in northern India that resisted Muslim expansion.","themes":["P", "S", "C"]},
+  "Swahili City-States":{"def":"Coastal East African trading cities blending Bantu, Arab, and Persian influences in the Indian Ocean network.","themes":["E", "C", "S"]},
+  "Kingdom of Ghana":{"def":"West African trading empire (c.700–1200) controlling trans-Saharan gold-salt trade before Mali\'s rise.","themes":["E", "P"]},
+  "Three Fields System":{"def":"Medieval European agricultural rotation dividing land into three strips to maintain soil fertility.","themes":["I", "T", "E"]},
+  "Monasticism":{"def":"Religious practice of withdrawing from secular life to live in community devoted to prayer and study.","themes":["C", "S"]},
+  "Nasir al-Din al-Tusi":{"def":"13th-century Persian astronomer who advanced trigonometry and revised the Ptolemaic model of the cosmos.","themes":["T", "C"]},
+  "A\'ishah al-Ba\'uniyyah":{"def":"15th–16th-century Syrian Sufi scholar and prolific poet, demonstrating women\'s intellectual roles in Islam.","themes":["C", "S"]},
+  "Foot Binding":{"def":"Chinese practice of tightly binding girls\' feet as a beauty and status marker, severely limiting mobility.","themes":["S", "C"]},
+  "Tributary System":{"def":"Chinese diplomatic arrangement where neighboring states sent tribute to acknowledge Chinese superiority.","themes":["P", "E"]},
+  "Aztec (Mexica) Empire":{"def":"Mesoamerican empire centered at Tenochtitlan controlling trade, tribute, and ritual sacrifice.","themes":["P", "E", "C"]},
+  "Quipu":{"def":"Inca system of knotted cords used for record-keeping, census data, and communication across the empire.","themes":["T", "P"]},
+  "Kinship Groups":{"def":"Family-based social units forming the foundation of many pre-modern societies globally.","themes":["S"]},
+  "Porcelain Trade":{"def":"Chinese luxury ceramic driving Eurasian demand along the Silk Roads and Indian Ocean routes.","themes":["E", "C", "T"]},
+  "Pax Mongolica":{"def":"Period of relative peace under Mongol rule (c.1250–1350) enabling unprecedented Eurasian trade.","themes":["P", "E"]},
+  "Banking Houses":{"def":"Medieval European and Islamic financial institutions providing loans and credit for long-distance trade.","themes":["E", "T"]},
+  "Camel Saddles":{"def":"Technological innovation allowing camels to carry heavy loads across deserts, enabling trans-Saharan trade.","themes":["T", "E"]},
+  "Caravan":{"def":"Merchant group traveling together for safety across deserts or steppes, forming the backbone of overland trade.","themes":["E", "S"]},
+  "Caravanserai":{"def":"Roadside inns along Silk Road routes providing shelter and security for traveling merchants.","themes":["E", "T"]},
+  "Ibn Battuta":{"def":"14th-century Moroccan scholar who traveled 75,000 miles across the Islamic world, documenting trade networks.","themes":["C", "E", "S"]},
+  "Indian Ocean Monsoon Winds":{"def":"Seasonal wind patterns enabling predictable maritime travel between East Africa, Arabia, and India.","themes":["I", "T", "E"]},
+  "Lateen Sail":{"def":"Triangular sail allowing ships to sail into the wind, revolutionizing Indian Ocean maritime trade.","themes":["T", "E"]},
+  "Luxury Goods":{"def":"High-value, low-bulk goods (silk, spices, porcelain) that drove long-distance trade across Silk Road networks.","themes":["E", "C"]},
+  "Marco Polo":{"def":"Venetian merchant whose travels to Kublai Khan\'s China (1271–1295) introduced Europeans to Asian wealth.","themes":["E", "C"]},
+  "Margery Kempe":{"def":"15th-century English mystic and pilgrim whose autobiography is considered the earliest in English.","themes":["C", "S"]},
+  "Ming Dynasty":{"def":"Chinese dynasty (1368–1644) rebuilding after Mongol rule; sponsored Zheng He\'s voyages and ocean trade.","themes":["P", "E", "C"]},
+  "Mongolian Khanates":{"def":"The four successor states of Genghis Khan\'s empire (Yuan, Golden Horde, Il-Khanate, Chagatai).","themes":["P", "E"]},
+  "Porcelain":{"def":"Chinese luxury ceramic traded across Eurasia and Indian Ocean networks; one of China\'s most valued exports.","themes":["E", "C", "T"]},
+  "Silk Road":{"def":"Ancient overland trade network connecting China with Central Asia, the Middle East, and the Mediterranean.","themes":["E", "C", "T"]},
+  "Stirrup":{"def":"Central Asian innovation giving mounted warriors greater stability, transforming cavalry warfare.","themes":["T", "P"]},
+  "The Mongols":{"def":"Nomadic Central Asian people who built the largest contiguous land empire, connecting Eurasia via conquest.","themes":["P", "E"]},
+  "Trans-Saharan Trade Route":{"def":"Overland trading network crossing the Sahara, connecting North Africa with West African gold and salt.","themes":["E", "T"]},
+  "Zheng He":{"def":"Ming admiral who led seven naval expeditions (1405–1433) across the Indian Ocean to project Chinese power.","themes":["E", "P", "T"]},
+  "Genghis Khan":{"def":"Mongol leader who united nomadic tribes and launched conquests creating the largest land empire in history.","themes":["P", "E"]},
+  "Kublai Khan":{"def":"Mongol ruler who completed the conquest of China, founding the Yuan Dynasty and hosting Marco Polo.","themes":["P", "E", "C"]},
+  "Yuan Dynasty":{"def":"Mongol-ruled Chinese dynasty (1271–1368) that connected China to Eurasian trade and hosted foreign merchants.","themes":["P", "E", "C"]},
+  "Golden Horde":{"def":"Mongol Khanate ruling Russia and the Eurasian steppe (13th–15th c.), shaping Russian political culture.","themes":["P", "E"]},
+  "Il-Khanate":{"def":"Mongol Khanate ruling Persia and Iraq (1256–1335); eventually converted to Islam and patronized Persian culture.","themes":["P", "C"]},
+  "Flying Cash":{"def":"Early Chinese financial instrument allowing merchants to deposit money in one location and withdraw elsewhere.","themes":["E", "T"]},
+  "Hanseatic League":{"def":"Medieval trading alliance of German North Sea and Baltic merchant cities dominating northern European commerce.","themes":["E", "P"]},
+  "Kashgar":{"def":"Central Asian oasis city on the Silk Road; key hub between China, Persia, and India.","themes":["E", "C"]},
+  "Samarkand":{"def":"Major Silk Road city in Central Asia famed for culture, scholarship, and commercial trade.","themes":["E", "C", "T"]},
+  "Gunpowder":{"def":"Chinese invention used in weapons; spread via trade routes to the Islamic world and Europe, transforming warfare.","themes":["T", "P"]},
+  "Indian Ocean Network":{"def":"System of maritime trade routes across the Indian Ocean connecting East Africa, Arabia, India, and SE Asia.","themes":["E", "T"]},
+  "Trans-Saharan Network":{"def":"Trade network crossing the Sahara connecting sub-Saharan Africa with Mediterranean civilizations.","themes":["E", "C"]},
+  "Silk Roads Network":{"def":"Combined overland and maritime trade routes connecting Eurasia from China to the Mediterranean.","themes":["E", "C", "T"]},
+  "Bill of Exchange":{"def":"Financial document allowing merchants to transfer credit across long distances without carrying coins.","themes":["E", "T"]},
+  "Bubonic Plague":{"def":"Bacterial disease spread by fleas along trade routes; killed millions across Eurasia in the 14th century.","themes":["I", "S", "E"]},
+  "Dhow Ships":{"def":"Traditional Arab sailing vessels used for Indian Ocean trade between East Africa and Arabia.","themes":["T", "E"]},
+  "Merchant Diasporas":{"def":"Communities of foreign merchants settling abroad to facilitate long-distance trade (Jewish, Armenian, Chinese).","themes":["E", "S", "C"]},
+  "Malacca Strait":{"def":"Narrow sea passage between Malaysia and Sumatra controlling shipping between the Indian Ocean and China Sea.","themes":["E", "P", "T"]},
+  "Swahili Coast":{"def":"East African coastal trading region blending Bantu and Islamic cultures in the Indian Ocean network.","themes":["E", "C", "S"]},
+  "Akbar":{"def":"Mughal Emperor (1556–1605) who promoted religious tolerance, reformed administration, and expanded the empire.","themes":["P", "C"]},
+  "Manchu/Qing Dynasty":{"def":"Last Chinese imperial dynasty (1644–1912) founded by Manchu conquerors; greatly expanded China\'s borders.","themes":["P", "E"]},
+  "Mughal Empire":{"def":"Islamic empire in South Asia (1526–1857) known for religious diversity, architecture, and agrarian wealth.","themes":["P", "C", "E"]},
+  "Ottoman Empire":{"def":"Long-lived Islamic empire (1299–1922) centered in Anatolia, controlling trade between Europe and Asia.","themes":["P", "E", "C"]},
+  "Ottoman Tax Farming":{"def":"System leasing tax collection rights to private bidders, generating revenue but often causing exploitation.","themes":["P", "E"]},
+  "Safavid Empire":{"def":"Shia Muslim dynasty in Persia (1501–1736) that promoted Shia Islam and rivaled the Sunni Ottomans.","themes":["P", "C"]},
+  "Shi\'a Islam":{"def":"Branch of Islam recognizing Ali and his descendants as the rightful successors to Muhammad.","themes":["C", "P"]},
+  "Sikhism":{"def":"Monotheistic religion founded in 15th-century Punjab by Guru Nanak, blending Hindu and Islamic elements.","themes":["C", "S"]},
+  "Sunni Islam":{"def":"Majority branch of Islam accepting the elected caliphs as legitimate successors to Muhammad.","themes":["C", "P"]},
+  "Devshirme System":{"def":"Ottoman practice of conscripting Christian boys, converting them to Islam, and training them as soldiers or officials.","themes":["P", "S"]},
+  "Printing Press":{"def":"Gutenberg\'s 15th-century invention enabling mass production of books, accelerating literacy and new ideas.","themes":["T", "C"]},
+  "Protestant Reformation":{"def":"16th-century religious movement begun by Luther challenging Catholic authority, fracturing Western Christianity.","themes":["C", "P"]},
+  "Zamindars":{"def":"Tax-collecting intermediaries in Mughal India holding land rights in exchange for collecting peasant revenue.","themes":["P", "E", "S"]},
+  "Suleiman I":{"def":"\'The Magnificent,\' Ottoman sultan (1520–1566) who expanded the empire and codified Ottoman law.","themes":["P", "C"]},
+  "Shah Abbas I":{"def":"Safavid Shah (1588–1629) who modernized Persia\'s army, expanded trade, and made Isfahan a cultural center.","themes":["P", "E", "C"]},
+  "Aurangzeb":{"def":"Mughal Emperor (1658–1707) who expanded the empire to its height but imposed strict Islamic law, fueling unrest.","themes":["P", "C"]},
+  "Babur":{"def":"Central Asian warrior who founded the Mughal Empire by conquering northern India in 1526.","themes":["P"]},
+  "Martin Luther":{"def":"German monk who sparked the Protestant Reformation in 1517 by challenging indulgences and papal authority.","themes":["C", "P"]},
+  "Mehmed II":{"def":"Ottoman Sultan who conquered Constantinople in 1453, ending the Byzantine Empire and controlling key trade routes.","themes":["P", "E"]},
+  "Ghazi Warriors":{"def":"Islamic frontier warriors fighting to expand the faith; key to early Ottoman state-building.","themes":["P", "C"]},
+  "Gunpowder Empires":{"def":"Term for the Ottoman, Safavid, and Mughal empires that used firearms and artillery to build large states.","themes":["P", "T"]},
+  "Counter-Reformation":{"def":"Catholic Church\'s response to Protestantism, including the Council of Trent and Jesuit missions worldwide.","themes":["C", "P"]},
+  "Henry VIII":{"def":"English king who broke from Rome to form the Anglican Church, driven by desire for divorce and church wealth.","themes":["P", "C"]},
+  "Anglican Church":{"def":"English Protestant church established by Henry VIII in 1534, separating from Roman Catholic authority.","themes":["C", "P"]},
+  "Tokugawa Shogunate":{"def":"Japanese military government (1603–1868) that unified Japan, enforced hierarchy, and limited foreign contact.","themes":["P", "S", "E"]},
+  "Peter the Great":{"def":"Russian Tsar (1682–1725) who Westernized Russia and expanded its territory to the Baltic Sea.","themes":["P", "T", "C"]},
+  "Ivan the Terrible":{"def":"First Tsar of Russia (1547–1584) who centralized power and expanded territory through brutal tactics.","themes":["P"]},
+  "Taj Mahal":{"def":"Mughal mausoleum built by Shah Jahan in Agra; masterpiece of Islamic-Hindu architectural fusion.","themes":["C", "T"]},
+  "Shah Jahan":{"def":"Mughal Emperor (1628–1658) who commissioned the Taj Mahal and expanded Mughal cultural patronage.","themes":["C", "P"]},
+  "Janissaries":{"def":"Elite Ottoman infantry recruited through the devshirme system; pivotal to Ottoman military dominance.","themes":["P", "T"]},
+  "Millet System":{"def":"Ottoman system granting non-Muslim communities (Jews, Christians) autonomy to govern their own affairs.","themes":["P", "S", "C"]},
+  "Sunni-Shia Conflict":{"def":"Ongoing religious-political rivalry between Sunni Ottomans and Shia Safavids shaping Middle Eastern geopolitics.","themes":["C", "P"]},
+  "Tax Farming":{"def":"System where governments sell the right to collect taxes privately for an upfront payment.","themes":["E", "P"]},
+  "Divine Right of Kings":{"def":"Doctrine that monarchs receive power from God and are accountable only to Him, justifying absolutism.","themes":["P", "C"]},
+  "Jesuits":{"def":"Catholic religious order (Society of Jesus) that led Counter-Reformation missionary work in Asia and the Americas.","themes":["C", "P"]},
+  "Council of Trent":{"def":"Catholic Church assembly (1545–1563) that clarified doctrine and launched the Counter-Reformation.","themes":["C", "P"]},
+  "Inquisition":{"def":"Catholic tribunal established to identify and punish heresy; used widely in Spain and its colonies.","themes":["C", "P"]},
+  "Songhai Empire":{"def":"Largest West African empire (15th–16th c.) controlling trans-Saharan trade routes centered on Timbuktu.","themes":["E", "P"]},
+  "Timbuktu":{"def":"West African city in the Songhai Empire that became a center of Islamic scholarship and long-distance trade.","themes":["C", "E"]},
+  "Askia Muhammad":{"def":"Songhai emperor (1493–1528) who expanded the empire and made it a center of Islamic learning.","themes":["P", "C"]},
+  "Manchu Conquest of China":{"def":"17th-century takeover of China by the Manchu people, establishing the Qing Dynasty.","themes":["P"]},
+  "Qing Dynasty":{"def":"China\'s last dynasty (1644–1912) founded by Manchu rulers who expanded territory and maintained Confucian rule.","themes":["P", "E", "C"]},
+  "Caravel":{"def":"Small, fast Portuguese ship with lateen sails enabling exploration of African coasts and Atlantic crossings.","themes":["T", "E"]},
+  "Cash Crops":{"def":"Agricultural products grown for export sale rather than subsistence; central to colonial plantation economies.","themes":["E", "I"]},
+  "Casta Paintings":{"def":"Colonial Spanish American artworks depicting the racial-mixing hierarchy of colonial society.","themes":["C", "S"]},
+  "Chattel Slavery":{"def":"System treating enslaved people as heritable property; dominant form of slavery in the Americas.","themes":["S", "E", "P"]},
+  "Columbian Exchange":{"def":"Transfer of plants, animals, diseases, and people between the Americas and Eurasia following 1492.","themes":["I", "E", "S"]},
+  "Dutch East India Company":{"def":"First joint-stock company (1602) giving the Dutch a monopoly on Asian trade; model of corporate capitalism.","themes":["E", "P", "T"]},
+  "Encomienda System":{"def":"Spanish colonial labor system granting conquistadors rights to indigenous labor for religious instruction.","themes":["P", "S", "E"]},
+  "Fluyt":{"def":"Dutch cargo ship designed to reduce crew costs and maximize cargo, enabling efficient long-distance trade.","themes":["T", "E"]},
+  "Hacienda System":{"def":"Spanish colonial large-estate system using coerced indigenous or African labor to produce export goods.","themes":["E", "S", "P"]},
+  "Humanism":{"def":"Renaissance intellectual movement centered on human potential, classical learning, and secular concerns.","themes":["C", "T"]},
+  "Incan Mit\'a System":{"def":"Inca labor tribute requiring subjects to work on state projects; later exploited by Spanish colonizers.","themes":["P", "S", "E"]},
+  "Indentured Servitude":{"def":"System replacing slavery after 1833, using contract workers from India, China, and Africa in British colonies.","themes":["S", "E"]},
+  "Joint-Stock Companies":{"def":"Business entities where investors pool capital and share profits/risks; enabled large-scale colonial ventures.","themes":["E", "T", "P"]},
+  "Malaria":{"def":"Mosquito-borne disease devastating Native American and European populations in tropical colonies.","themes":["I", "S"]},
+  "Measles":{"def":"Eurasian infectious disease introduced to the Americas post-1492, killing large proportions of indigenous peoples.","themes":["I", "S"]},
+  "Mercantilism":{"def":"Economic theory that national wealth depends on accumulating gold through favorable trade balances and colonies.","themes":["E", "P"]},
+  "Secularism":{"def":"Philosophy emphasizing human reason and worldly concerns over religious authority; grew from the Renaissance.","themes":["C", "P"]},
+  "Smallpox":{"def":"Deadly Eurasian disease devastating indigenous Americans after 1492; killed up to 90% in some regions.","themes":["I", "S"]},
+  "Kingdom of Kongo":{"def":"Central African kingdom (14th–19th c.) that traded early with Portuguese; later devastated by the slave trade.","themes":["P", "E", "C"]},
+  "Middle Passage":{"def":"Horrific transatlantic voyage enslaved Africans endured from Africa to the Americas in packed ships.","themes":["S", "E"]},
+  "The Renaissance":{"def":"European cultural revival (14th–17th c.) drawing on classical learning and celebrating human achievement.","themes":["C", "T"]},
+  "Treaty of Tordesillas":{"def":"1494 Spain-Portugal agreement dividing newly discovered non-Christian lands between the two powers.","themes":["P", "E"]},
+  "Trading Post Empire":{"def":"Portuguese strategy of seizing key ports to control and tax trade without large-scale land conquest.","themes":["E", "P"]},
+  "Vasco da Gama":{"def":"Portuguese explorer who found the sea route to India (1498), connecting Europe directly to Asian markets.","themes":["E", "T", "P"]},
+  "Russian Boyars":{"def":"Noble landowning class in Russia; often in conflict with centralizing rulers like Ivan the Terrible.","themes":["P", "S"]},
+  "Asante Kingdom":{"def":"West African kingdom (1701–1900) built on gold trade; resisted British colonization.","themes":["P", "E"]},
+  "Astrolabe":{"def":"Astronomical instrument allowing sailors to determine latitude by measuring star angles.","themes":["T", "E"]},
+  "Magnetic Compass":{"def":"Chinese navigational tool using magnetism to find direction; adopted by European and Islamic sailors.","themes":["T", "E"]},
+  "Sternpost Rudder":{"def":"Ship steering innovation allowing more precise navigation of large ocean-going vessels.","themes":["T", "E"]},
+  "Carrack":{"def":"Large, multi-masted European ship capable of carrying heavy cargo on oceanic voyages.","themes":["T", "E"]},
+  "Triangular Trade":{"def":"Atlantic trade system connecting Europe, Africa, and the Americas: manufactured goods, enslaved people, raw materials.","themes":["E", "S"]},
+  "Atlantic Slave Trade":{"def":"Forced migration of ~12 million Africans to the Americas (1500–1900) to work on plantations.","themes":["S", "E", "P"]},
+  "Silver Trade":{"def":"Global network centered on American silver mined at Potosí, flowing to China via Spain and the Philippines.","themes":["E", "P"]},
+  "Maroon Societies":{"def":"Communities of escaped enslaved people who formed independent settlements resisting colonial power.","themes":["S", "P"]},
+  "Pueblo Revolts":{"def":"1680 Pueblo peoples\' uprising in New Mexico against Spanish colonial rule, temporarily expelling the Spanish.","themes":["P", "S"]},
+  "Casta System":{"def":"Spanish colonial racial hierarchy ranking people by their mix of European, African, and indigenous ancestry.","themes":["S", "P", "C"]},
+  "Mission System":{"def":"Spanish colonial institutions run by priests to convert and control indigenous peoples.","themes":["C", "P", "S"]},
+  "Henry the Navigator":{"def":"Portuguese prince who sponsored early 15th-century voyages of exploration along the African coast.","themes":["E", "T", "P"]},
+  "Christopher Columbus":{"def":"Genoese explorer who reached the Caribbean in 1492 while sailing for Spain, initiating contact between hemispheres.","themes":["E", "P"]},
+  "Ferdinand Magellan":{"def":"Portuguese explorer whose expedition (1519–1522) completed the first circumnavigation of the globe.","themes":["T", "E", "P"]},
+  "Nzinga of Ndongo":{"def":"17th-century Queen of Ndongo (Angola) who resisted Portuguese colonization through military and diplomacy.","themes":["P", "S"]},
+  "Gujarat Merchants":{"def":"Indian Ocean traders from western India connecting the Persian Gulf, East Africa, and Southeast Asia.","themes":["E", "C", "S"]},
+  "Manila Galleons":{"def":"Spanish ships linking Acapulco and Manila, connecting American silver to Asian markets.","themes":["E", "T"]},
+  "Potosí Silver Mines":{"def":"Massive Bolivian silver mines worked by forced mit\'a labor, producing much of the world\'s silver.","themes":["E", "I", "S"]},
+  "Coerced Labor":{"def":"Forced work systems including slavery, serfdom, and tribute labor that sustained colonial economies.","themes":["S", "E", "P"]},
+  "Plantation System":{"def":"Large-scale agricultural operations using enslaved labor to produce export crops for European markets.","themes":["E", "S", "I"]},
+  "Sugar Revolution":{"def":"17th-century transformation of Caribbean islands into sugar colonies powered by enslaved African labor.","themes":["E", "S", "I"]},
+  "Horses":{"def":"Animals introduced to the Americas post-1492 that transformed indigenous warfare and mobility.","themes":["I", "S"]},
+  "Potatoes":{"def":"Andean crop introduced to Europe via the Columbian Exchange; boosted food supply and population growth.","themes":["I", "E"]},
+  "Tobacco":{"def":"American crop that drove plantation expansion and demand for enslaved labor after the Columbian Exchange.","themes":["E", "I", "S"]},
+  "Cotton":{"def":"Fiber crop central to the Atlantic plantation economy and the Industrial Revolution\'s textile industry.","themes":["E", "I", "S"]},
+  "Rights of Women (1792)":{"def":"Mary Wollstonecraft\'s 1792 treatise arguing women deserve equal rational education and political rights as men.","themes":["S", "C", "P"]},
+  "Bessemer Process":{"def":"1856 innovation cheaply converting iron to steel, enabling railroads, bridges, and industrial construction.","themes":["T", "E"]},
+  "Communism":{"def":"Political ideology advocating collective ownership of production and a classless, stateless society.","themes":["P", "C", "S"]},
+  "Rights of Woman Decl.":{"def":"Olympe de Gouges\' 1791 document demanding equal rights for French women; she was executed in 1793.","themes":["S", "P", "C"]},
+  "Elizabeth Cady Stanton":{"def":"American suffragist who co-authored the 1848 Seneca Falls Declaration demanding equal rights for women.","themes":["S", "P"]},
+  "Free-Market Capitalism":{"def":"Economic system in which private actors control production and prices with minimal government interference.","themes":["E", "P"]},
+  "Industrial Revolution":{"def":"Late 18th–19th century shift from hand production to machine manufacturing, beginning in Britain.","themes":["T", "E", "S"]},
+  "Mary Wollstonecraft":{"def":"British philosopher who wrote \'A Vindication of the Rights of Woman\' (1792), a founding feminist text.","themes":["C", "S", "P"]},
+  "Montesquieu":{"def":"French Enlightenment thinker who advocated separation of powers, influencing the U.S. Constitution.","themes":["C", "P"]},
+  "Nationalism":{"def":"Ideology claiming people with a shared identity deserve their own state; reshaped 19th-century borders.","themes":["P", "C", "S"]},
+  "Olympe de Gouges":{"def":"French activist who wrote the Declaration of the Rights of Woman (1791), demanding gender equality.","themes":["S", "P", "C"]},
+  "Railroads":{"def":"Steam-powered transportation networks revolutionizing the movement of goods and people in the 19th century.","themes":["T", "E"]},
+  "Robespierre":{"def":"Jacobin leader of the French Revolution\'s Reign of Terror (1793–94), executing thousands of perceived enemies.","themes":["P", "S"]},
+  "Seneca Falls Convention":{"def":"1848 women\'s rights conference in New York producing the Declaration of Sentiments demanding suffrage.","themes":["S", "P"]},
+  "Socialism":{"def":"Economic theory advocating collective ownership of production to reduce inequality and exploitation.","themes":["P", "E", "S"]},
+  "Spinning Jenny":{"def":"1764 multi-spindle machine dramatically increasing textile production, sparking the Industrial Revolution.","themes":["T", "E"]},
+  "Steam Engine":{"def":"Watt\'s 1769 steam-powered machine powering factories, railroads, and steamships; drove industrialization.","themes":["T", "E"]},
+  "Enlightenment":{"def":"18th-century European intellectual movement emphasizing reason, individual rights, and scientific method.","themes":["C", "P"]},
+  "Toussaint Louverture":{"def":"Leader of the Haitian Revolution (1791–1803) who defeated European armies to free enslaved people.","themes":["P", "S"]},
+  "Women\'s Suffrage Movement":{"def":"19th–20th century campaign for women\'s right to vote; achieved in many nations by the early 20th century.","themes":["S", "P"]},
+  "Simon Bolivar":{"def":"South American independence leader who liberated Venezuela, Colombia, Ecuador, Peru, and Bolivia from Spain.","themes":["P", "S"]},
+  "Letter from Jamaica":{"def":"Simón Bolívar\'s 1815 political manifesto arguing for Latin American independence from Spain.","themes":["P", "C"]},
+  "Liberalism":{"def":"Political philosophy emphasizing individual rights, constitutional government, and free markets.","themes":["P", "C", "E"]},
+  "John Locke":{"def":"English philosopher who argued for natural rights (life, liberty, property) and government by consent.","themes":["C", "P"]},
+  "Rousseau":{"def":"French Enlightenment philosopher who argued for popular sovereignty and the social contract.","themes":["C", "P"]},
+  "Voltaire":{"def":"French Enlightenment writer who critiqued religious intolerance and absolutism, championing reason.","themes":["C", "P"]},
+  "Natural Rights":{"def":"Enlightenment concept that all humans possess inherent rights governments cannot legitimately violate.","themes":["C", "P", "S"]},
+  "Social Contract":{"def":"Theory that legitimate government rests on an agreement between rulers and the governed.","themes":["C", "P"]},
+  "American Revolution":{"def":"1775–1783 colonial rebellion against British rule, establishing the first modern democratic republic.","themes":["P", "C", "S"]},
+  "French Revolution":{"def":"1789–1799 radical political upheaval ending the French monarchy and establishing liberty and equality.","themes":["P", "S", "C"]},
+  "Haitian Revolution":{"def":"1791–1804 slave revolt in Saint-Domingue creating the first Black republic and abolishing slavery.","themes":["P", "S", "C"]},
+  "Latin American Revolutions":{"def":"19th-century independence movements across Spanish and Portuguese colonies, inspired by Enlightenment ideals.","themes":["P", "S", "C"]},
+  "Karl Marx":{"def":"German philosopher who developed scientific socialism, predicting class conflict would lead to communist revolution.","themes":["C", "P", "E"]},
+  "The Communist Manifesto":{"def":"1848 pamphlet by Marx and Engels declaring history is driven by class struggle and calling workers to revolt.","themes":["C", "P", "S"]},
+  "Bourgeoisie":{"def":"Marxist term for the capitalist class who own the means of production and exploit the working class.","themes":["S", "E", "P"]},
+  "Proletariat":{"def":"Marxist term for the industrial working class who sell their labor and are exploited under capitalism.","themes":["S", "E", "P"]},
+  "Labor Unions":{"def":"Worker organizations that collectively bargain for better wages, hours, and working conditions.","themes":["S", "E", "P"]},
+  "Utopian Socialism":{"def":"Early 19th-century vision of ideal cooperative communities as alternatives to industrial capitalism.","themes":["C", "S", "E"]},
+  "Coal Industry":{"def":"Extraction of coal to power steam engines; central to the British Industrial Revolution.","themes":["T", "E", "I"]},
+  "Factory System":{"def":"Industrial production concentrating workers and machines in one location for mass manufacturing.","themes":["T", "E", "S"]},
+  "Child Labor":{"def":"Industrial-era practice employing children in mines and factories for low wages in dangerous conditions.","themes":["S", "E"]},
+  "Working Class":{"def":"Industrial proletariat earning wages in factories; poor conditions sparked socialist and union movements.","themes":["S", "E"]},
+  "Middle Class":{"def":"Emerging social group of professionals and business owners who benefited from industrialization.","themes":["S", "E"]},
+  "Urbanization":{"def":"Mass migration from rural areas to cities driven by industrial job opportunities.","themes":["S", "I", "E"]},
+  "Luddites":{"def":"Early 19th-century English workers who destroyed machinery fearing industrial job displacement.","themes":["S", "E", "T"]},
+  "German Unification":{"def":"1871 consolidation of German states under Prussian leadership by Otto von Bismarck.","themes":["P", "S", "C"]},
+  "Italian Unification":{"def":"1860–1871 Risorgimento movement uniting Italian city-states and kingdoms into a single nation.","themes":["P", "S", "C"]},
+  "Meiji Restoration":{"def":"1868 Japanese revolution restoring imperial rule and launching rapid industrialization to resist Western power.","themes":["P", "T", "E"]},
+  "Empress Cixi":{"def":"Powerful Chinese regent (1861–1908) who resisted deep reform but eventually supported Westernization.","themes":["P", "S"]},
+  "Abolitionism":{"def":"19th-century movement to end slavery; achieved in the British Empire (1833) and USA (1865).","themes":["S", "P", "C"]},
+  "Declaration of Independence":{"def":"1776 American founding document asserting Enlightenment natural rights and justifying revolution.","themes":["P", "C"]},
+  "Reign of Terror":{"def":"1793–94 phase of the French Revolution in which Robespierre ordered thousands of executions.","themes":["P", "S"]},
+  "Napoleon Bonaparte":{"def":"French general turned Emperor (1804–1815) who spread revolutionary laws across Europe through conquest.","themes":["P", "C", "S"]},
+  "Congress of Vienna":{"def":"1814–15 European peace conference redrawing post-Napoleonic borders and restoring conservative order.","themes":["P"]},
+  "Interchangeable Parts":{"def":"Manufacturing innovation using standardized components to enable mass production and easy repair.","themes":["T", "E"]},
+  "Agricultural Revolution":{"def":"18th-century transformation of farming through new techniques enabling industrialization.","themes":["I", "T", "E"]},
+  "Seed Drill":{"def":"Jethro Tull\'s 1701 invention sowing seeds in rows efficiently, boosting crop yields.","themes":["T", "I", "E"]},
+  "Cotton Gin":{"def":"Eli Whitney\'s 1793 invention separating cotton fiber from seeds, dramatically increasing slave-grown cotton output.","themes":["T", "E", "S"]},
+  "Enclosure Movement":{"def":"British consolidation of common farmland into private holdings, displacing rural workers to cities.","themes":["E", "I", "S"]},
+  "Opium Wars":{"def":"1839–42 and 1856–60 conflicts in which Britain forced China to accept opium trade and unequal treaties.","themes":["E", "P"]},
+  "Boxer Rebellion":{"def":"1900 Chinese nationalist uprising targeting foreign influence; suppressed by an international military coalition.","themes":["P", "C", "S"]},
+  "Chinese Exclusion Act":{"def":"1882 U.S. law banning Chinese immigration; the first major federal restriction based on race.","themes":["P", "S"]},
+  "Civilizing Mission":{"def":"European colonial justification claiming a duty to \'civilize\' non-European peoples through conquest.","themes":["C", "P", "S"]},
+  "Guano Industry":{"def":"19th-century Peruvian export boom using bird droppings as fertilizer; funded state modernization.","themes":["E", "I"]},
+  "Nativism":{"def":"Political ideology favoring existing inhabitants over immigrants; used to restrict Asian migration in the U.S. and Australia.","themes":["P", "S", "C"]},
+  "Congo Rubber Plantations":{"def":"King Leopold II\'s brutal exploitation of the Congo using forced labor to harvest rubber, causing millions of deaths.","themes":["E", "S", "P"]},
+  "Sepoy Mutiny":{"def":"1857 Indian rebellion against the British East India Company; led to direct British Crown control of India.","themes":["P", "S", "C"]},
+  "Social Darwinism":{"def":"Misapplication of Darwin\'s ideas to justify racial hierarchy and imperialism as \'survival of the fittest.\'","themes":["C", "S", "P"]},
+  "Taiping Rebellion":{"def":"Massive Chinese civil war (1850–1864) led by a Christian sect; killed 20–30 million people.","themes":["P", "C", "S"]},
+  "Túpac Amaru II":{"def":"18th-century Peruvian indigenous leader who led the largest rebellion against Spanish colonial rule.","themes":["P", "S"]},
+  "White Australia Policy":{"def":"Australian government policy (1901–1973) restricting non-European immigration using race-based criteria.","themes":["P", "S", "C"]},
+  "Imperialism":{"def":"Policy of extending a country\'s power through colonization, economic control, or military force.","themes":["P", "E", "S"]},
+  "Phrenologists":{"def":"Pseudoscientists who claimed skull measurements revealed racial and intellectual hierarchy, used to justify imperialism.","themes":["C", "S", "P"]},
+  "White Man\'s Burden":{"def":"Rudyard Kipling\'s 1899 poem justifying imperialism as a European duty to \'civilize\' non-European peoples.","themes":["C", "P", "S"]},
+  "British East India Company":{"def":"Private British trading company that effectively governed India from the 17th–19th centuries.","themes":["E", "P"]},
+  "Scramble for Africa":{"def":"Rapid European colonization of Africa in the 1880s–1890s, driven by competition for resources.","themes":["P", "E"]},
+  "Berlin Conference":{"def":"1884–85 meeting where European powers divided Africa without African input, formalizing colonization.","themes":["P", "E"]},
+  "King Leopold II":{"def":"Belgian king who claimed the Congo as a personal colony, using forced labor to extract rubber and ivory.","themes":["P", "E", "S"]},
+  "Congo Free State":{"def":"Leopold II\'s personal colonial state in Central Africa (1885–1908) where millions died under forced labor.","themes":["P", "S", "E"]},
+  "Suez Canal":{"def":"1869 Egyptian waterway connecting the Mediterranean and Red Sea, dramatically cutting Europe-Asia shipping times.","themes":["T", "E", "P"]},
+  "Boer War":{"def":"1899–1902 conflict between Britain and Dutch-descended Boers in South Africa; Britain won using concentration camps.","themes":["P", "S"]},
+  "Afrikaners":{"def":"Dutch-descended South African settlers (Boers) who formed a distinct culture and resisted British rule.","themes":["S", "C", "P"]},
+  "Spheres of Influence":{"def":"Areas where one foreign power claims exclusive trading or political privileges over a weaker state.","themes":["P", "E"]},
+  "Treaty of Nanjing":{"def":"1842 treaty ending the First Opium War, forcing China to cede Hong Kong and open ports to Britain.","themes":["P", "E"]},
+  "Sino-Japanese War":{"def":"1894–95 war in which Japan defeated China, gaining Taiwan and establishing regional dominance.","themes":["P", "E"]},
+  "Monroe Doctrine":{"def":"1823 U.S. policy declaring the Western Hemisphere off-limits to new European colonization.","themes":["P", "E"]},
+  "Roosevelt Corollary":{"def":"1904 extension of the Monroe Doctrine asserting U.S. right to intervene in Latin American affairs.","themes":["P", "E"]},
+  "Manifest Destiny":{"def":"19th-century U.S. belief that westward expansion to the Pacific was divinely ordained.","themes":["C", "P", "I"]},
+  "Spanish-American War":{"def":"1898 conflict in which the U.S. defeated Spain and acquired Guam, Puerto Rico, and the Philippines.","themes":["P", "E"]},
+  "Great Game":{"def":"19th-century geopolitical rivalry between Britain and Russia for influence in Central Asia.","themes":["P", "E"]},
+  "Penal Colony":{"def":"British settlements in Australia and elsewhere where convicted criminals were sent as forced laborers.","themes":["P", "S"]},
+  "Direct vs. Indirect Rule":{"def":"Colonial governance: direct rule imposed European systems; indirect rule used local leaders as intermediaries.","themes":["P", "S"]},
+  "Samory Touré":{"def":"West African leader who built an empire and led armed resistance against French colonization (1880s–1890s).","themes":["P", "S", "C"]},
+  "Yaa Asantewaa War":{"def":"1900 Asante queen-led rebellion against British colonial rule in the Gold Coast (Ghana).","themes":["P", "S", "C"]},
+  "Sokoto Caliphate":{"def":"19th-century West African Islamic state in present-day Nigeria that resisted British colonization.","themes":["P", "C"]},
+  "Zulu Kingdom":{"def":"South African kingdom that defeated the British at Isandlwana (1879) before being subdued.","themes":["P", "S"]},
+  "Anglo-Zulu War":{"def":"1879 conflict in which Britain invaded and eventually defeated the Zulu Kingdom in southern Africa.","themes":["P", "S"]},
+  "Xhosa Cattle-Killing":{"def":"1856–57 millenarian movement in which Xhosa people killed their cattle believing it would expel the British.","themes":["C", "S", "P"]},
+  "Mahdist Revolt":{"def":"1880s Sudanese Islamic uprising against Egyptian and British control, briefly establishing an independent state.","themes":["P", "C"]},
+  "Pan-Africanism":{"def":"Political movement advocating solidarity among people of African descent worldwide against colonial rule.","themes":["P", "S", "C"]},
+  "Indian National Congress":{"def":"Organization founded in 1885 that led India\'s independence movement against British rule.","themes":["P", "S", "C"]},
+  "Cherokee Nation":{"def":"Indigenous nation of the American Southeast forcibly relocated west on the Trail of Tears.","themes":["P", "S", "C"]},
+  "Trail of Tears":{"def":"Forced relocation of Five Civilized Tribes from the Southeast to Oklahoma (1838–39), killing thousands.","themes":["P", "S", "I"]},
+  "Export Economies":{"def":"Colonial economies producing raw materials and agricultural goods for export to imperial centers.","themes":["E", "P"]},
+  "Monocultures":{"def":"Colonial practice of growing a single cash crop that depleted soil and created economic dependency.","themes":["I", "E", "P"]},
+  "Palm Oil":{"def":"West African commodity that fueled British industrialization as a machine lubricant and colonial export.","themes":["E", "I"]},
+  "Rubber":{"def":"Tropical commodity essential for industrial machinery; harvested through forced labor in colonies.","themes":["E", "I", "T"]},
+  "Ethnic Enclaves":{"def":"Communities where immigrants cluster together, maintaining cultural practices in foreign environments.","themes":["S", "C"]},
+  "Menelik II (Abyssinia)":{"def":"Ethiopian emperor who defeated Italy at Adwa (1896), maintaining Ethiopian independence uniquely.","themes":["P", "S"]},
+  "José Rizal":{"def":"Filipino nationalist and author executed by Spain in 1896, inspiring the Philippine Revolution.","themes":["P", "C", "S"]},
+  "Philippine Revolution":{"def":"1896–1898 Filipino uprising against Spanish colonial rule, briefly establishing an independent republic.","themes":["P", "S", "C"]},
+  "Cecil Rhodes":{"def":"British mining magnate who dreamed of a British Africa \'Cape to Cairo\' and colonized Zimbabwe.","themes":["P", "E"]},
+  "Migration Patterns":{"def":"Mass movement of people — often indentured workers from Asia — to fill labor gaps in 19th-century colonies.","themes":["S", "E", "I"]},
+  "Adolf Hitler":{"def":"Nazi dictator of Germany (1933–45) whose racial ideology and expansionism caused World War II and the Holocaust.","themes":["P", "S", "C"]},
+  "Atomic Bomb":{"def":"Nuclear weapon developed by the U.S. Manhattan Project and dropped on Japan (1945), ending WWII.","themes":["T", "P", "S"]},
+  "Fascist Corporatism":{"def":"Fascist economic system merging state and corporate power to direct labor and production.","themes":["P", "E"]},
+  "Five Year Plan":{"def":"Stalin\'s Soviet economic programs that rapidly industrialized the USSR through state-directed production.","themes":["E", "P", "T"]},
+  "Franklin D. Roosevelt":{"def":"U.S. president who led America through the Great Depression (New Deal) and most of World War II.","themes":["P", "E", "S"]},
+  "Joseph Stalin":{"def":"Soviet dictator who industrialized the USSR through brutal collectivization, purges, and the Gulag system.","themes":["P", "S", "E"]},
+  "League of Nations":{"def":"Post-WWI international organization to maintain peace; weakened by U.S. non-membership.","themes":["P", "C"]},
+  "Russian Revolution 1917":{"def":"Two-stage revolution ending Tsarist rule and establishing the world\'s first communist state.","themes":["P", "S", "E"]},
+  "Armenian Genocide":{"def":"Ottoman massacre of ~1.5 million Armenians (1915–23) through deportations and mass executions.","themes":["P", "S", "C"]},
+  "Great Depression":{"def":"Global economic collapse (1929–1939) causing massive unemployment and fueling political extremism.","themes":["E", "P", "S"]},
+  "Holodomor":{"def":"Stalin\'s engineered famine in Soviet Ukraine (1932–33) killing millions to crush resistance to collectivization.","themes":["P", "S", "I"]},
+  "Holocaust":{"def":"Nazi genocide (1941–45) murdering 6 million Jews and millions of others in concentration camps.","themes":["P", "S", "C"]},
+  "Khmer Rouge":{"def":"Cambodian communist regime (1975–79) that killed ~2 million in a radical agrarian revolution.","themes":["P", "S", "C"]},
+  "New Deal":{"def":"FDR\'s programs (1933–39) expanding U.S. government to provide economic relief during the Great Depression.","themes":["P", "E", "S"]},
+  "Wartime Homefront":{"def":"Mobilization of civilians during WWII, transforming women\'s labor roles and wartime economies.","themes":["S", "E", "P"]},
+  "Total War":{"def":"Modern warfare mobilizing entire economies and civilian populations, as in WWI and WWII.","themes":["P", "S", "E", "T"]},
+  "Winston Churchill":{"def":"British Prime Minister who led Britain\'s resistance against Nazi Germany during World War II.","themes":["P", "C"]},
+  "World War I":{"def":"1914–1918 global conflict triggered by nationalism, imperial rivalries, and the assassination of Franz Ferdinand.","themes":["P", "T", "S"]},
+  "World War II":{"def":"1939–1945 global conflict involving mass industrial warfare, genocide, and use of atomic bombs.","themes":["P", "T", "S"]},
+  "Mexican Revolution":{"def":"1910–1920 revolution ending the Díaz dictatorship; produced a constitution addressing land and labor rights.","themes":["P", "S", "E"]},
+  "Propaganda":{"def":"State-controlled messaging used to manipulate public opinion; especially powerful in WWI and WWII.","themes":["C", "P"]},
+  "Fascism":{"def":"Authoritarian nationalist ideology glorifying the state and rejecting individual rights through mass mobilization.","themes":["P", "C", "S"]},
+  "Totalitarianism":{"def":"Political system where the state seeks total control over public and private life (USSR, Nazi Germany).","themes":["P", "S", "C"]},
+  "Militarism":{"def":"Policy of building and aggressively using military power; a major cause of World War I.","themes":["P", "T"]},
+  "Fire Bombing":{"def":"WWII Allied tactic using incendiary weapons to destroy civilian infrastructure and morale.","themes":["T", "P", "S"]},
+  "Genocide":{"def":"Deliberate extermination of an ethnic, national, racial, or religious group; legally defined after the Holocaust.","themes":["P", "S", "C"]},
+  "Rwandan Genocide":{"def":"1994 massacre in which Hutu extremists killed ~800,000 Tutsi people in 100 days.","themes":["P", "S", "C"]},
+  "Bolsheviks":{"def":"Lenin\'s radical communist faction that seized power in Russia\'s October Revolution of 1917.","themes":["P", "S", "C"]},
+  "Central Powers":{"def":"WWI alliance of Germany, Austria-Hungary, the Ottoman Empire, and Bulgaria.","themes":["P"]},
+  "Allied Powers":{"def":"WWI coalition of Britain, France, Russia, Italy, and the United States against the Central Powers.","themes":["P"]},
+  "Reparations":{"def":"War damages Germany was required to pay under the Treaty of Versailles; contributed to economic collapse.","themes":["E", "P"]},
+  "Paris Peace Conference":{"def":"1919 Allied meeting producing the Treaty of Versailles; redrew the world map after WWI.","themes":["P", "C"]},
+  "Fourteen Points":{"def":"Woodrow Wilson\'s 1918 peace plan emphasizing self-determination, open diplomacy, and the League of Nations.","themes":["P", "C"]},
+  "Weimar Republic":{"def":"German democratic government (1919–1933) undermined by reparations, inflation, and the Great Depression.","themes":["P", "E", "S"]},
+  "Trench Warfare":{"def":"WWI defensive strategy of parallel trenches creating years of bloody stalemate on the Western Front.","themes":["T", "P", "S"]},
+  "Stalemate":{"def":"Military deadlock in which neither side can advance; defining characteristic of WWI\'s Western Front.","themes":["P", "T"]},
+  "Collectivization":{"def":"Stalin\'s policy forcing peasants into state-controlled collective farms, causing widespread famine.","themes":["P", "S", "E", "I"]},
+  "Balfour Declaration":{"def":"1917 British letter supporting a Jewish homeland in Palestine, contributing to Arab-Israeli conflict.","themes":["P", "C"]},
+  "Mandate System":{"def":"Post-WWI League of Nations system placing former Ottoman territories under British and French control.","themes":["P", "S"]},
+  "Archduke Franz Ferdinand":{"def":"Austrian heir whose 1914 assassination in Sarajevo triggered the alliance system and World War I.","themes":["P"]},
+  "Zimmermann Telegram":{"def":"1917 German proposal of a military alliance with Mexico against the U.S., accelerating American entry into WWI.","themes":["P"]},
+  "Triple Alliance":{"def":"Pre-WWI military pact between Germany, Austria-Hungary, and Italy.","themes":["P"]},
+  "Triple Entente":{"def":"Pre-WWI alliance between France, Russia, and Britain, opposing the Triple Alliance.","themes":["P"]},
+  "Blitzkrieg":{"def":"German WWII tactic of rapid coordinated attacks using tanks and aircraft to overwhelm defenses.","themes":["T", "P"]},
+  "D-Day":{"def":"June 6, 1944 Allied amphibious invasion of Normandy, France; turning point of WWII in Europe.","themes":["P", "T"]},
+  "Pearl Harbor":{"def":"December 7, 1941 Japanese surprise attack on the U.S. naval base in Hawaii, bringing America into WWII.","themes":["P", "T"]},
+  "Hiroshima":{"def":"Japanese city destroyed by the first atomic bomb (August 6, 1945), killing ~80,000 people immediately.","themes":["T", "P", "S"]},
+  "Nagasaki":{"def":"Japanese city destroyed by the second atomic bomb (August 9, 1945), accelerating Japan\'s surrender.","themes":["T", "P", "S"]},
+  "Lend-Lease Act":{"def":"1941 U.S. program supplying Britain and the USSR with war materials while officially remaining neutral.","themes":["E", "P"]},
+  "Kristallnacht":{"def":"\'Night of Broken Glass\' (1938): Nazi pogrom destroying Jewish businesses and synagogues across Germany.","themes":["P", "S", "C"]},
+  "Nuremberg Laws":{"def":"1935 Nazi racial laws stripping Jews of citizenship and prohibiting marriage with non-Jews.","themes":["P", "S", "C"]},
+  "Anti-Semitism":{"def":"Prejudice and discrimination against Jewish people; the central ideology driving Nazi genocide.","themes":["C", "S", "P"]},
+  "Mein Kampf":{"def":"Hitler\'s 1925 autobiographical manifesto outlining his racial ideology and plans for German expansion.","themes":["C", "P"]},
+  "Self-Determination":{"def":"Wilson\'s principle that national groups have the right to form their own states; reshaped post-WWI borders.","themes":["P", "C", "S"]},
+  "Sun Yat-sen":{"def":"Chinese revolutionary who overthrew the Qing Dynasty in 1911 and founded the Nationalist party.","themes":["P", "C"]},
+  "Mao Zedong":{"def":"Communist leader who won China\'s civil war in 1949, establishing the People\'s Republic of China.","themes":["P", "S", "C"]},
+  "Long March":{"def":"1934–35 strategic retreat of Chinese Communist forces that cemented Mao Zedong\'s leadership.","themes":["P", "S"]},
+  "Chinese Communist Party":{"def":"Marxist-Leninist party founded 1921; won the Chinese civil war and has ruled China since 1949.","themes":["P", "C", "S"]},
+  "Mohandas Gandhi":{"def":"Indian independence leader who pioneered nonviolent civil disobedience (satyagraha) against British rule.","themes":["P", "S", "C"]},
+  "Jawaharlal Nehru":{"def":"India\'s first Prime Minister who led independence and championed non-alignment in the Cold War.","themes":["P", "C", "S"]},
+  "Decolonization":{"def":"Post-WWII process by which European colonies gained independence, reshaping the global political map.","themes":["P", "S", "C"]},
+  "Pancho Villa":{"def":"Mexican revolutionary general who fought for land reform during the Mexican Revolution.","themes":["P", "S"]},
+  "Emiliano Zapata":{"def":"Mexican revolutionary leader who fought for agrarian reform (\'Land and Liberty\') in southern Mexico.","themes":["P", "S", "E"]},
+  "Mussolini":{"def":"Italian fascist dictator (1922–1943) who allied with Hitler in the Axis powers.","themes":["P", "C"]},
+  "Francisco Franco":{"def":"Spanish fascist dictator (1939–1975) who rose to power after winning the Spanish Civil War.","themes":["P"]},
+  "Rape of Nanjing":{"def":"1937–38 Japanese military atrocity in China\'s capital killing 200,000–300,000 civilians.","themes":["P", "S", "C"]},
+  "Non-Aggression Pact":{"def":"1939 secret German-Soviet agreement to divide Eastern Europe; allowed Hitler to invade Poland.","themes":["P"]},
+  "Appeasement Policy":{"def":"1930s British/French strategy of conceding to Hitler\'s demands to avoid war; failed at Munich (1938).","themes":["P", "C"]},
+  "Axis Powers":{"def":"WWII alliance of Nazi Germany, Fascist Italy, and Imperial Japan.","themes":["P"]},
+  "The Cold War":{"def":"1947–1991 ideological conflict between U.S. capitalism and Soviet communism, fought via proxy wars and arms race.","themes":["P", "E", "C"]},
+  "Augusto Pinochet":{"def":"Military dictator of Chile (1973–1990) who overthrew a democratic socialist government with U.S. support.","themes":["P", "E", "S"]},
+  "State of Israel Created":{"def":"1948 establishment of Israel following the Holocaust; triggered decades of Arab-Israeli conflict.","themes":["P", "C", "S"]},
+  "Ho Chi Minh":{"def":"Vietnamese communist leader who fought French colonialism and U.S. intervention, unifying Vietnam in 1975.","themes":["P", "S", "C"]},
+  "Kwame Nkrumah":{"def":"Pan-Africanist who led Ghana to independence in 1957, the first sub-Saharan African nation to decolonize.","themes":["P", "S", "C"]},
+  "Margaret Thatcher":{"def":"British PM (1979–1990) who implemented neoliberal economic policies including privatization and deregulation.","themes":["P", "E", "C"]},
+  "Martin Luther King Jr.":{"def":"American civil rights leader who used nonviolent campaigns for racial equality, including the March on Washington.","themes":["S", "P", "C"]},
+  "NATO":{"def":"North Atlantic Treaty Organization (1949): U.S.-led military alliance of Western nations pledging collective defense.","themes":["P"]},
+  "Negritude Movement":{"def":"1930s cultural movement by African and Caribbean intellectuals celebrating Black culture against colonialism.","themes":["C", "S", "P"]},
+  "Nelson Mandela":{"def":"South African anti-apartheid leader imprisoned 27 years; became the first democratically elected president in 1994.","themes":["P", "S", "C"]},
+  "Non-Aligned Movement":{"def":"Cold War coalition of newly independent states refusing alignment with either the U.S. or Soviet bloc.","themes":["P", "S", "C"]},
+  "Partition of India":{"def":"1947 division of British India into India and Pakistan, causing massive communal violence.","themes":["P", "S", "C"]},
+  "Proxy War":{"def":"Cold War conflicts where U.S. and USSR supported opposing sides without directly fighting (Korea, Vietnam).","themes":["P", "E"]},
+  "Ronald Reagan":{"def":"U.S. President (1981–1989) who pursued aggressive anti-communist policies and neoliberal economic reforms.","themes":["P", "E", "C"]},
+  "Salt March":{"def":"Gandhi\'s 1930 nonviolent march protesting the British salt tax; galvanized India\'s independence movement.","themes":["P", "S", "C"]},
+  "Sukarno":{"def":"Indonesia\'s first president who declared independence from the Netherlands (1945) and championed non-alignment.","themes":["P", "S", "C"]},
+  "Warsaw Pact":{"def":"Soviet-led military alliance of Eastern European communist states, countering NATO.","themes":["P"]},
+  "Containment":{"def":"U.S. Cold War strategy of preventing Soviet communism from spreading to new countries.","themes":["P", "C"]},
+  "Marshall Plan":{"def":"U.S. program (1948–52) providing $13 billion to rebuild Western Europe and resist communism.","themes":["E", "P"]},
+  "Apartheid":{"def":"South African racial segregation system (1948–1994) legally separating and oppressing Black South Africans.","themes":["P", "S", "C"]},
+  "Bandung Conference":{"def":"1955 meeting of 29 Asian and African nations declaring solidarity and Cold War non-alignment.","themes":["P", "S", "C"]},
+  "Deng Xiaoping":{"def":"Chinese leader (1978–1997) who opened China to market reforms while maintaining Communist Party rule.","themes":["P", "E"]},
+  "Neoliberalism":{"def":"Economic policy advocating free markets, privatization, deregulation, and reduced government spending.","themes":["E", "P", "C"]},
+  "Green Revolution":{"def":"1960s–80s agricultural transformation using high-yield crops to combat famine across the developing world.","themes":["I", "T", "E"]},
+  "Oil Embargo 1973":{"def":"OPEC Arab oil embargo against Western nations supporting Israel in the Yom Kippur War, causing energy crisis.","themes":["E", "P"]},
+  "Glasnost":{"def":"Gorbachev\'s Soviet policy of political openness and free speech that helped accelerate the end of the Cold War.","themes":["P", "C"]},
+  "Perestroika":{"def":"Gorbachev\'s Soviet economic restructuring allowing limited market reforms; contributed to the USSR\'s collapse.","themes":["P", "E"]},
+  "Berlin Wall":{"def":"Barrier dividing East and West Berlin (1961–1989); symbol of the Iron Curtain.","themes":["P", "S", "C"]},
+  "Cuban Missile Crisis":{"def":"1962 standoff between the U.S. and USSR over Soviet missiles in Cuba; closest point to nuclear war.","themes":["P", "T"]},
+  "Korean War":{"def":"1950–53 Cold War proxy war in which U.S.-led forces fought communist North Korea backed by China.","themes":["P", "S"]},
+  "Vietnam War":{"def":"1955–1975 conflict in which North Vietnam defeated U.S.-backed South Vietnam, unifying under communism.","themes":["P", "S", "C"]},
+  "Mutual Assured Destruction":{"def":"Cold War nuclear doctrine that both superpowers would be destroyed in nuclear war, deterring its use.","themes":["P", "T"]},
+  "Nuclear Arms Race":{"def":"U.S.-Soviet competition to build more and more powerful nuclear weapons during the Cold War.","themes":["T", "P", "E"]},
+  "Sputnik":{"def":"Soviet satellite launched in 1957, the first human-made object in space, starting the Space Race.","themes":["T", "P"]},
+  "Truman Doctrine":{"def":"1947 U.S. policy committing to support nations resisting communist subjugation.","themes":["P", "C"]},
+  "Iron Curtain":{"def":"Churchill\'s 1946 phrase for the political-military division between Western and Soviet-controlled Europe.","themes":["P", "C"]},
+  "Berlin Airlift":{"def":"1948–49 U.S./British operation supplying West Berlin by air after the Soviet ground blockade.","themes":["P", "E", "T"]},
+  "Domino Theory":{"def":"Cold War belief that if one country fell to communism, neighboring nations would follow.","themes":["P", "C"]},
+  "Détente":{"def":"1970s period of relaxed Cold War tensions between the U.S. and USSR, including arms limitation talks.","themes":["P"]},
+  "Suez Crisis":{"def":"1956 conflict over Egypt\'s nationalization of the Suez Canal; marked decline of British and French global power.","themes":["P", "E"]},
+  "Six-Day War":{"def":"1967 conflict in which Israel defeated Egypt, Jordan, and Syria, occupying the West Bank and Gaza.","themes":["P", "S", "C"]},
+  "Camp David Accords":{"def":"1978 U.S.-brokered peace agreement between Egypt and Israel; the first Arab-Israeli peace treaty.","themes":["P", "C"]},
+  "Algerian Independence":{"def":"1962 Algerian independence from France after a brutal 8-year war killing ~1.5 million Algerians.","themes":["P", "S", "C"]},
+  "Mikhail Gorbachev":{"def":"Last Soviet leader whose reforms (glasnost, perestroika) inadvertently led to the USSR\'s collapse in 1991.","themes":["P", "E", "C"]},
+  "Fall of Berlin Wall":{"def":"November 1989 event symbolizing the end of the Cold War and German reunification.","themes":["P", "S", "C"]},
+  "Yalta Conference":{"def":"1945 meeting of Roosevelt, Churchill, and Stalin to plan the post-WWII world order.","themes":["P"]},
+  "Potsdam Conference":{"def":"1945 Allied summit deciding the occupation of Germany and demanding Japan\'s unconditional surrender.","themes":["P"]},
+  "Military-Industrial Complex":{"def":"Eisenhower\'s 1961 warning about the powerful alliance between the defense industry and the U.S. military.","themes":["P", "E", "T"]},
+  "Cultural Revolution (China)":{"def":"Mao\'s 1966–76 radical campaign targeting \'bourgeois\' elements, causing mass violence and cultural destruction.","themes":["P", "C", "S"]},
+  "Prague Spring":{"def":"1968 Czechoslovak reform movement crushed by Soviet invasion, showing the limits of Soviet tolerance.","themes":["P", "C", "S"]},
+  "Iran Islamic Revolution":{"def":"1979 revolution replacing the U.S.-backed Shah with an Islamic Republic under Ayatollah Khomeini.","themes":["P", "C", "S"]},
+  "Leopold Senghor":{"def":"Senegalese poet and president who championed Négritude and African cultural independence.","themes":["C", "P", "S"]},
+  "Julius Nyerere":{"def":"Tanzania\'s first president who promoted African socialism (Ujamaa) and Pan-African unity.","themes":["P", "C", "S"]},
+  "Patrice Lumumba":{"def":"First Prime Minister of Congo, assassinated in 1961 with CIA and Belgian involvement.","themes":["P", "S", "C"]},
+  "Al-Qaeda":{"def":"Islamist extremist network founded by Osama bin Laden; carried out the September 11, 2001 attacks.","themes":["P", "C", "S"]},
+  "ASEAN":{"def":"Association of Southeast Asian Nations (1967): regional economic and political cooperation bloc.","themes":["E", "P"]},
+  "Birth Control Pill":{"def":"1960 contraceptive innovation that transformed social and gender roles by giving women reproductive control.","themes":["S", "T", "C"]},
+  "Bollywood":{"def":"Mumbai-based Hindi film industry producing the world\'s most films; major form of Indian cultural export.","themes":["C", "S"]},
+  "Civil Rights Movements":{"def":"20th-century campaigns by marginalized groups for equality; most prominent in the U.S. and South Africa.","themes":["S", "P", "C"]},
+  "Deforestation":{"def":"Large-scale destruction of forests for agriculture and industry, causing biodiversity loss and climate change.","themes":["I", "E"]},
+  "Desertification":{"def":"Process by which fertile land becomes desert due to overuse, deforestation, and climate change.","themes":["I", "E"]},
+  "GMOs":{"def":"Genetically modified organisms increasing agricultural yields, but raising environmental and health debates.","themes":["T", "I", "E"]},
+  "Greenhouse Effect":{"def":"Process by which greenhouse gases trap heat in the atmosphere, driving global warming.","themes":["I", "T"]},
+  "NAFTA":{"def":"North American Free Trade Agreement (1994) eliminating trade barriers between the U.S., Canada, and Mexico.","themes":["E", "P"]},
+  "Panama Canal":{"def":"U.S.-built waterway (1914) through Panama connecting Atlantic and Pacific Oceans, revolutionizing shipping.","themes":["T", "E", "P"]},
+  "Reggae":{"def":"Jamaican music blending African, Caribbean, and American influences; vehicle for social and political protest.","themes":["C", "S"]},
+  "Shining Path":{"def":"Maoist terrorist organization in Peru that launched a violent rural insurgency (1980–1992).","themes":["P", "S", "C"]},
+  "European Union":{"def":"Post-WWII integration of European nations sharing a common currency (euro) and open borders.","themes":["E", "P"]},
+  "Olympics":{"def":"International athletic competition revived in 1896; became a stage for Cold War politics and national identity.","themes":["C", "P", "S"]},
+  "United Nations":{"def":"International organization founded in 1945 to promote peace, security, and human rights globally.","themes":["P", "C", "S"]},
+  "World Cup":{"def":"FIFA international soccer tournament held every 4 years; world\'s most-watched sporting event.","themes":["C", "S", "E"]},
+  "World Trade Organization":{"def":"International body (1995) setting global trade rules and resolving disputes between nations.","themes":["E", "P"]},
+  "Internet":{"def":"Global computer network enabling instant communication and commerce; the defining technology of globalization.","themes":["T", "E", "C"]},
+  "Containerization":{"def":"Standardized shipping containers that dramatically cut costs and fueled the growth of global trade.","themes":["T", "E"]},
+  "Digital Revolution":{"def":"Shift from analog to digital technologies transforming communication, work, and culture worldwide.","themes":["T", "E", "C"]},
+  "World Health Organization":{"def":"UN agency (1948) coordinating international public health responses and disease prevention.","themes":["S", "P", "I"]},
+  "HIV/AIDS":{"def":"Pandemic emerging in the 1980s that killed millions globally; disproportionately affected sub-Saharan Africa.","themes":["I", "S", "P"]},
+  "Climate Change":{"def":"Long-term shifts in global temperatures driven by greenhouse gas emissions since industrialization.","themes":["I", "E", "P"]},
+  "Greenhouse Gases":{"def":"Gases (CO₂, methane) trapping heat in the atmosphere; their increase is the primary cause of global warming.","themes":["I", "T", "E"]},
+  "Paris Agreement":{"def":"2015 international accord committing nations to limit global warming to 1.5–2°C above pre-industrial levels.","themes":["P", "I", "E"]},
+  "International Monetary Fund":{"def":"Bretton Woods institution (1944) providing loans to countries with balance-of-payment crises.","themes":["E", "P"]},
+  "World Bank":{"def":"Bretton Woods institution (1944) providing development loans to low-income countries.","themes":["E", "P"]},
+  "Multinational Corps.":{"def":"Large corporations operating across multiple countries, driving globalization and often accused of exploitation.","themes":["E", "P", "S"]},
+  "Structural Adj. Programs":{"def":"IMF/World Bank loan conditions requiring nations to cut spending and privatize, often harming the poor.","themes":["E", "P", "S"]},
+  "NGOs":{"def":"Non-governmental organizations providing humanitarian aid and advocacy independently of governments.","themes":["S", "P", "C"]},
+  "Cultural Diffusion":{"def":"Spread of cultural elements (food, music, language) between societies through trade, migration, and media.","themes":["C", "S", "E"]},
+  "Cultural Hybridity":{"def":"Creation of new cultural forms by blending elements from multiple traditions; a product of globalization.","themes":["C", "S"]},
+  "Religious Fundamentalism":{"def":"Strict adherence to religious doctrines, often as a reaction against globalization and Western influence.","themes":["C", "P", "S"]},
+  "K-Pop":{"def":"South Korean popular music that became a global cultural phenomenon, representing Korean soft power.","themes":["C", "S", "E"]},
+  "Anime":{"def":"Japanese animation with global cultural impact, representing Japan\'s significant cultural soft power.","themes":["C", "S"]},
+  "Social Media":{"def":"Internet platforms enabling mass communication; transforming political movements and cultural exchange.","themes":["C", "S", "T"]},
+  "E-Commerce":{"def":"Buying and selling goods via the internet; transformed global retail and supply chains.","themes":["E", "T"]},
+  "Global Brands":{"def":"Multinational consumer brands (Coca-Cola, Nike) spreading consumer culture globally.","themes":["E", "C", "S"]},
+  "Consumer Culture":{"def":"Economic and social system centered on purchase of goods as status and identity, spread globally through media.","themes":["E", "C", "S"]},
+  "Streaming Video":{"def":"Internet-based media delivery transforming global entertainment consumption.","themes":["T", "C", "E"]},
+  "UN Human Rights Decl.":{"def":"1948 United Nations document declaring fundamental rights for all human beings regardless of nation.","themes":["P", "C", "S"]},
+  "Global Feminism":{"def":"Transnational movement advocating for women\'s rights and gender equality across cultural boundaries.","themes":["S", "P", "C"]},
+  "Desmond Tutu":{"def":"South African Anglican archbishop and anti-apartheid activist who won the Nobel Peace Prize in 1984.","themes":["S", "C", "P"]},
+  "End of Apartheid":{"def":"1994 democratic elections in South Africa ended apartheid; Mandela became first elected Black president.","themes":["P", "S", "C"]},
+  "Brexit":{"def":"2016 British vote to leave the European Union, signaling a backlash against globalization.","themes":["P", "E", "C"]},
+  "Kyoto Protocol":{"def":"1997 international treaty requiring industrialized nations to reduce greenhouse gas emissions.","themes":["P", "I", "E"]},
+  "Earth Day":{"def":"Annual environmental awareness day (April 22) that began in 1970, sparking the modern environmental movement.","themes":["I", "C", "S"]},
+  "Ecotourism":{"def":"Sustainable travel to natural areas that conserves the environment and benefits local communities.","themes":["I", "E", "S"]},
+  "Globalization":{"def":"Increasing interconnectedness of economies, cultures, and politics worldwide through trade and technology.","themes":["E", "C", "T", "P"]},
+  "Neocolonialism":{"def":"Post-independence economic dominance by wealthy nations over formerly colonized states through debt and trade.","themes":["E", "P", "S"]},
+  "Washington Consensus":{"def":"1980s–90s economic model promoting free markets, privatization, and deregulation for developing nations.","themes":["E", "P", "C"]},
+  "Battle of Seattle":{"def":"1999 WTO protests in Seattle where tens of thousands rallied against corporate-driven globalization.","themes":["P", "S", "E"]},
+  "Anti-Globalization Mvmt":{"def":"International movement opposing corporate-driven globalization and its harm to workers and the environment.","themes":["S", "P", "E"]},
+  "Ebola":{"def":"Deadly viral disease from Central Africa; the 2014–16 outbreak killed 11,000, exposing global health gaps.","themes":["I", "S", "P"]},
+  "COVID-19":{"def":"Global pandemic (2020–) caused by the SARS-CoV-2 coronavirus; killed millions and disrupted world economies.","themes":["I", "S", "E", "P"]},
+  "1918 Flu Pandemic":{"def":"Influenza pandemic killing 50–100 million people globally, accelerated by WWI troop movements.","themes":["I", "S"]},
+  "9/11 Attacks":{"def":"September 11, 2001 Al-Qaeda terrorist attacks on the U.S. killing ~3,000; triggered the War on Terror.","themes":["P", "C", "S"]},
+  "Taliban":{"def":"Afghan Islamist group providing sanctuary to Al-Qaeda and restoring strict Islamic law after 2001.","themes":["P", "C", "S"]},
+  "Doctors Without Borders":{"def":"International humanitarian medical NGO providing emergency care in conflict zones worldwide.","themes":["S", "P", "I"]},
+  "UNICEF":{"def":"UN Children\'s Fund providing humanitarian and developmental assistance to children worldwide.","themes":["S", "P"]},
+  "Tiananmen Square":{"def":"1989 Beijing pro-democracy protests crushed by the Chinese military, killing hundreds of protesters.","themes":["P", "S", "C"]},
+  "Osama bin Laden":{"def":"Saudi-born founder of Al-Qaeda who planned the 9/11 attacks; killed by U.S. forces in Pakistan in 2011.","themes":["P", "C", "S"]},
+  "Diasporic Communities":{"def":"Communities formed by people dispersed from their homelands, maintaining cultural identity abroad while adapting to new societies.","themes":["S", "C", "P"]},
+  "Potosi Silver Mines":{"def":"Massive silver mines in the Bolivian Andes operated by the Spanish using mita forced labor, fueling global trade networks.","themes":["E", "S", "P"]},
+  "Rubber Plantations in the Congo":{"def":"Belgian King Leopold II's brutal rubber extraction system in the Congo Free State, marked by forced labor and mass atrocities.","themes":["E", "P", "S"]},
+  "Tupac Amaru II":{"def":"18th-century Andean leader who led the largest indigenous rebellion against Spanish colonial rule in the Americas (1780–81).","themes":["P", "S", "C"]},
+  "Samory Toure":{"def":"West African Muslim leader who built an empire and led armed resistance against French colonization in the late 19th century.","themes":["P", "S", "C"]},
+  "Menelik II":{"def":"Ethiopian emperor who modernized his army and defeated Italian forces at the Battle of Adwa (1896), preserving Ethiopian independence.","themes":["P", "S", "C"]},
+  "Jose Rizal":{"def":"Filipino nationalist author and physician whose writings inspired the Philippine Revolution against Spanish colonial rule.","themes":["C", "P", "S"]},
+  "Detente":{"def":"1970s policy of easing Cold War tensions between the U.S. and Soviet Union through diplomacy, arms control, and trade agreements.","themes":["P", "E", "C"]},
+  "1918 Influenza Pandemic":{"def":"Deadliest influenza pandemic in history, killing 50–100 million people globally; spread rapidly due to WWI troop movements.","themes":["I", "S", "P"]}
+};
+
+function dd(arr){const s=new Set();return arr.filter(t=>{const k=t.trim().toUpperCase();if(s.has(k))return false;s.add(k);return true;});}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+const SPICE_COL={S:'#f06292',P:'#ef5350',I:'#4caf50',C:'#ce93d8',E:'#ffd54f',T:'#40c4ff'};
+const SPICE_FULL={S:'Social',P:'Political',I:'Environmental',C:'Cultural',E:'Economic',T:'Technological'};
+
+const RAW = {
+  1: dd(['Baghdad House of Wisdom','Buddhism','Buddhist Monasticism','Champa Rice','Chinampas','Civil Service Exam','Confucianism','Delhi Sultanate','Feudalism','Filial Piety','Grand Canal','Hindu Caste System','Islam','Judaism','Mandate of Heaven','Muslim Translation Movement','Maize','Neo-Confucianism','Paper Money','Serfdom','Terrace Farming','Vijayanagara Empire','Little Ice Age','Compass','Umayyad Dynasty','Song Dynasty','Abbasid Caliphate','Sufism','Mamluk Sultanate','Ethiopia','Khmer Empire','Maya City-States','Mesa Verde','Mita System','Griots','Manorial System','Black Plague','Jizya Tax','Tang Dynasty','Srivijaya Empire','Al-Andalus','Seljuk Empire','Hinduism','Hausa Kingdoms','Sukhothai Kingdom','Inca Empire','Great Zimbabwe','Roman Catholic Church','Mali Empire','Mansa Musa','Five Pillars of Islam','Tale of Genji','The Crusades','Four Noble Truths','Samurai','Patriarchy','Silk Roads','Eightfold Path','Bureaucracy','Guilds','Syncretic Faiths','Daimyo','Shogun','Scholar-Gentry','Indian Ocean Trade','Bhakti Movement','Rajput Kingdoms','Swahili City-States','Kingdom of Ghana','Three Fields System','Monasticism','Nasir al-Din al-Tusi',"A'ishah al-Ba'uniyyah",'Foot Binding','Tributary System','Aztec (Mexica) Empire','Quipu','Kinship Groups','Porcelain Trade']),
+  2: dd(['Pax Mongolica','Banking Houses','Camel Saddles','Caravan','Caravanserai','Ibn Battuta','Indian Ocean Monsoon Winds','Lateen Sail','Luxury Goods','Marco Polo','Margery Kempe','Ming Dynasty','Mongolian Khanates','Porcelain','Silk Road','Stirrup','Black Plague','The Mongols','Trans-Saharan Trade Route','Zheng He','Genghis Khan','Kublai Khan','Yuan Dynasty','Golden Horde','Il-Khanate','Flying Cash','Hanseatic League','Kashgar','Samarkand','Gunpowder','Mansa Musa','Mali Empire','Indian Ocean Network','Trans-Saharan Network','Silk Roads Network','Bill of Exchange','Bubonic Plague','Dhow Ships','Merchant Diasporas','Paper Money','Malacca Strait','Swahili Coast','Diasporic Communities']),
+  3: dd(['Akbar','Manchu/Qing Dynasty','Mughal Empire','Ottoman Empire','Ottoman Tax Farming','Roman Catholic Church','Safavid Empire','Samurai',"Shi'a Islam",'Sikhism','Sufism','Sunni Islam','Devshirme System','Printing Press','Protestant Reformation','Zamindars','Suleiman I','Shah Abbas I','Aurangzeb','Babur','Martin Luther','Mehmed II','Ghazi Warriors','Gunpowder Empires','Counter-Reformation','Henry VIII','Anglican Church','Tokugawa Shogunate','Daimyo','Peter the Great','Ivan the Terrible','Taj Mahal','Shah Jahan','Jizya Tax','Janissaries','Millet System','Sunni-Shia Conflict','Tax Farming','Divine Right of Kings','Jesuits','Council of Trent','Inquisition','Songhai Empire','Timbuktu','Askia Muhammad','Manchu Conquest of China','Qing Dynasty','Ming Dynasty']),
+  4: dd(['Caravel','Cash Crops','Casta Paintings','Chattel Slavery','Columbian Exchange','Divine Right of Kings','Dutch East India Company','Encomienda System','Fluyt','Hacienda System','Humanism',"Incan Mit'a System",'Indentured Servitude','Joint-Stock Companies','Malaria','Measles','Mercantilism','Secularism','Smallpox','Kingdom of Kongo','Middle Passage','The Renaissance','Treaty of Tordesillas','Trading Post Empire','Vasco da Gama','Qing Dynasty','Russian Boyars','Maize','Asante Kingdom','Astrolabe','Magnetic Compass','Sternpost Rudder','Carrack','Triangular Trade','Atlantic Slave Trade','Silver Trade','Maroon Societies','Pueblo Revolts','Casta System','Mission System','Henry the Navigator','Christopher Columbus','Ferdinand Magellan','Nzinga of Ndongo','Swahili Coast','Gujarat Merchants','Manila Galleons','Potosi Silver Mines','Coerced Labor','Plantation System','Sugar Revolution','Horses','Potatoes','Tobacco','Cotton']),
+  5: dd(['Rights of Women (1792)','Bessemer Process','Communism','Rights of Woman Decl.','Elizabeth Cady Stanton','Free-Market Capitalism','Industrial Revolution','Mary Wollstonecraft','Montesquieu','Nationalism','Olympe de Gouges','Railroads','Robespierre','Seneca Falls Convention','Socialism','Spinning Jenny','Steam Engine','Enlightenment','Toussaint Louverture',"Women's Suffrage Movement",'Simon Bolivar','Letter from Jamaica','Liberalism','John Locke','Rousseau','Voltaire','Natural Rights','Social Contract','American Revolution','French Revolution','Haitian Revolution','Latin American Revolutions','Karl Marx','The Communist Manifesto','Bourgeoisie','Proletariat','Labor Unions','Utopian Socialism','Coal Industry','Factory System','Child Labor','Working Class','Middle Class','Urbanization','Luddites','German Unification','Italian Unification','Meiji Restoration','Empress Cixi','Abolitionism','Declaration of Independence','Reign of Terror','Napoleon Bonaparte','Congress of Vienna','Interchangeable Parts','Agricultural Revolution','Seed Drill','Cotton Gin','Enclosure Movement']),
+  6: dd(['Opium Wars','Boxer Rebellion','Chinese Exclusion Act','Civilizing Mission','Guano Industry','Labor Unions','Meiji Restoration','Nativism','Rubber Plantations in the Congo','Sepoy Mutiny','Social Darwinism','Taiping Rebellion','Tupac Amaru II','White Australia Policy','Imperialism','Nationalism','Phrenologists',"White Man's Burden",'British East India Company','Dutch East India Company','Scramble for Africa','Berlin Conference','King Leopold II','Congo Free State','Suez Canal','Boer War','Afrikaners','Spheres of Influence','Treaty of Nanjing','Sino-Japanese War','Monroe Doctrine','Roosevelt Corollary','Manifest Destiny','Spanish-American War','Great Game','Penal Colony','Direct vs. Indirect Rule','Samory Toure','Yaa Asantewaa War','Sokoto Caliphate','Zulu Kingdom','Anglo-Zulu War','Xhosa Cattle-Killing','Mahdist Revolt','Pan-Africanism','Indian National Congress','Cherokee Nation','Trail of Tears','Export Economies','Cash Crops','Monocultures','Cotton','Palm Oil','Rubber','Indentured Servitude','Migration Patterns','Ethnic Enclaves','Menelik II','Jose Rizal','Philippine Revolution','Cecil Rhodes']),
+  7: dd(['Adolf Hitler','Atomic Bomb','Fascist Corporatism','Five Year Plan','Franklin D. Roosevelt','Indian National Congress','Joseph Stalin','League of Nations','Russian Revolution 1917','Armenian Genocide','Great Depression','Holodomor','Holocaust','Khmer Rouge','New Deal','Wartime Homefront','Total War','Winston Churchill','World War I','World War II','Mexican Revolution','Propaganda','Fascism','Totalitarianism','Militarism','Fire Bombing','Genocide','Rwandan Genocide','Bolsheviks','Central Powers','Allied Powers','Reparations','Paris Peace Conference','Fourteen Points','Weimar Republic','Trench Warfare','Stalemate','Collectivization','Balfour Declaration','Mandate System','Archduke Franz Ferdinand','Zimmermann Telegram','Triple Alliance','Triple Entente','Blitzkrieg','D-Day','Pearl Harbor','Hiroshima','Nagasaki','Lend-Lease Act','Kristallnacht','Nuremberg Laws','Anti-Semitism','Mein Kampf','Self-Determination','Sun Yat-sen','Mao Zedong','Long March','Chinese Communist Party','Mohandas Gandhi','Jawaharlal Nehru','Decolonization','Pancho Villa','Emiliano Zapata','Mussolini','Francisco Franco','Rape of Nanjing','Non-Aggression Pact','Appeasement Policy','Axis Powers']),
+  8: dd(['The Cold War','Augusto Pinochet','State of Israel Created','Mohandas Gandhi','Ho Chi Minh','Kwame Nkrumah','Mao Zedong','Margaret Thatcher','Martin Luther King Jr.','NATO','Negritude Movement','Nelson Mandela','Non-Aligned Movement','Partition of India','Proxy War','Ronald Reagan','Salt March','Sukarno','Warsaw Pact','Decolonization','Containment','Marshall Plan','Apartheid','Bandung Conference','Deng Xiaoping','Neoliberalism','Green Revolution','Oil Embargo 1973','Glasnost','Perestroika','Berlin Wall','Cuban Missile Crisis','Korean War','Vietnam War','Mutual Assured Destruction','Nuclear Arms Race','Sputnik','Truman Doctrine','Iron Curtain','Berlin Airlift','Domino Theory','Detente','Suez Crisis','Six-Day War','Camp David Accords','Algerian Independence','Mikhail Gorbachev','Fall of Berlin Wall','Yalta Conference','Potsdam Conference','Military-Industrial Complex','Cultural Revolution (China)','Prague Spring','Iran Islamic Revolution','Leopold Senghor','Julius Nyerere','Patrice Lumumba']),
+  9: dd(['Al-Qaeda','ASEAN','Birth Control Pill','Bollywood','Civil Rights Movements','Deforestation','Deng Xiaoping','Desertification','GMOs','Green Revolution','Greenhouse Effect','NAFTA','Panama Canal','Reggae','Shining Path','European Union','Olympics','United Nations','World Cup','World Trade Organization','Internet','Containerization','Digital Revolution','World Health Organization','HIV/AIDS','Climate Change','Greenhouse Gases','Paris Agreement','Neoliberalism','International Monetary Fund','World Bank','Multinational Corps.','Structural Adj. Programs','NGOs','Cultural Diffusion','Cultural Hybridity','Religious Fundamentalism','K-Pop','Anime','Social Media','E-Commerce','Global Brands','Consumer Culture','Streaming Video','UN Human Rights Decl.','Global Feminism','Desmond Tutu','End of Apartheid','Brexit','Kyoto Protocol','Earth Day','Ecotourism','Globalization','Neocolonialism','Washington Consensus','Battle of Seattle','Anti-Globalization Mvmt','Ebola','COVID-19','1918 Influenza Pandemic','9/11 Attacks','Taliban','Doctors Without Borders','UNICEF','Tiananmen Square','Osama bin Laden']),
+};
+const CONTENT = {
+  '1':{label:'Unit 1 · Global Tapestry',desc:'1200–1450',units:[1]},
+  '2':{label:'Unit 2 · Networks of Exchange',desc:'1200–1450',units:[2]},
+  '3':{label:'Unit 3 · Land-Based Empires',desc:'1450–1750',units:[3]},
+  '4':{label:'Unit 4 · Maritime Empires',desc:'1450–1750',units:[4]},
+  '5':{label:'Unit 5 · Revolutions',desc:'1750–1900',units:[5]},
+  '6':{label:'Unit 6 · Imperialism',desc:'1750–1900',units:[6]},
+  '7':{label:'Unit 7 · Global Conflict',desc:'1900–Present',units:[7]},
+  '8':{label:'Unit 8 · Cold War & Decolonization',desc:'1900–Present',units:[8]},
+  '9':{label:'Unit 9 · Globalization',desc:'1900–Present',units:[9]},
+  'p1':{label:'Period 1 · Units 1+2',desc:'1200–1450',units:[1,2]},
+  'p2':{label:'Period 2 · Units 3+4',desc:'1450–1750',units:[3,4]},
+  'p3':{label:'Period 3 · Units 5+6',desc:'1750–1900',units:[5,6]},
+  'p4':{label:'Period 4 · Units 7+8+9',desc:'1900–Present',units:[7,8,9]},
+  'leq1':{label:'LEQ 1 · Periods 1 & 2',desc:'Units 1–4 · 1200–1750',units:[1,2,3,4]},
+  'leq2':{label:'LEQ 2 · Periods 2 & 3',desc:'Units 3–6 · 1450–1900',units:[3,4,5,6]},
+  'leq3':{label:'LEQ 3 · Periods 3 & 4',desc:'Units 5–9 · 1750–Present',units:[5,6,7,8,9]},
+  'chaos':{label:'💥 CHAOS MODE',desc:'All 9 Units',units:[1,2,3,4,5,6,7,8,9]},
+};
+function getTerms(key){return dd(CONTENT[key].units.flatMap(u=>RAW[u]));}
+const P_COLORS=['#ef5350','#42a5f5','#66bb6a','#ffa726','#ce93d8','#26c6da'];
+const P_DARK  =['#7f0000','#0a2472','#1b5e20','#bf360c','#4a148c','#006064'];
+const FW_COL  ={comparison:'#64b5f6',causation:'#ffb74d',ccot:'#81c784',none:'#555'};
+
+// Structural scaffolds only — no term substitution
+const STEMS={
+  comparison:[
+    'Possible structure:\n"Both [Term A] and [Term B] share [SPICE-T theme] characteristics in that… while differing in…"',
+    'Possible structure:\n"Unlike [Term B], [Term A] demonstrates [SPICE-T theme] contrasts because… however both reveal…"',
+    'Possible structure:\n"[Term A] and [Term B] both reflect [SPICE-T theme] dynamics, specifically… yet diverge in…"',
+    'Possible structure:\n"Across [SPICE-T theme] dimensions, [Term A] and [Term B] show similarities in… and differences in…"',
+  ],
+  causation:[
+    'Possible structure:\n"[Term A] created the [SPICE-T theme] conditions for [Term B] by… which led to…"',
+    'Possible structure:\n"Without [Term B]\'s [SPICE-T theme] impact, [Term A] would not have developed because…"',
+    'Possible structure:\n"[Term A] directly enabled [Term B] through [SPICE-T theme] mechanisms, specifically…"',
+    'Possible structure:\n"[Term B] was both a [SPICE-T theme] cause and consequence of [Term A] in that…"',
+  ],
+  ccot:[
+    'Possible structure:\n"While [Term B] represents [SPICE-T theme] continuity, [Term A] marks a shift because…"',
+    'Possible structure:\n"Both terms show [SPICE-T theme] continuity in that… yet [Term A] represents change when…"',
+    'Possible structure:\n"Over time, [Term B] evolved into the [SPICE-T theme] pattern of [Term A] because…"',
+    'Possible structure:\n"[Term A] marks a [SPICE-T theme] turning point from [Term B] in that…"',
+  ]
+};
+
+// ── SETUP STATE ──
+let sPlayers=[{name:'Player 1'},{name:'Player 2'}];
+let sContentKey='1';
+let sModeTab='unit';
+let sTimerSecs=0;
+
+function setModeTab(tab){
+  sModeTab=tab;
+  ['unit','period','leq'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('sel',t===tab);
+    document.getElementById('mode-'+t).style.display=t===tab?'':'none';
+  });
+  const firstKeys={unit:'1',period:'p1',leq:'leq1'};
+  if(firstKeys[tab])selectContent(firstKeys[tab]);
+}
+function selectTimer(secs){
+  sTimerSecs=secs;
+  document.querySelectorAll('.timer-opt').forEach(b=>b.classList.toggle('sel',parseInt(b.dataset.secs)===secs));
+}
+function selectContent(key){
+  sContentKey=key;
+  if(key==='chaos'){
+    ['unit','period','leq'].forEach(t=>{
+      document.getElementById('tab-'+t).classList.remove('sel');
+      document.getElementById('mode-'+t).style.display='none';
+    });
+    sModeTab=null;
+  }
+  document.querySelectorAll('.sel-btn,.chaos-btn').forEach(b=>{
+    b.classList.toggle('sel',b.getAttribute('data-key')===key||(key==='chaos'&&b.id==='chaos-btn'));
+  });
+  const cfg=CONTENT[key],n=getTerms(key).length;
+  document.getElementById('sel-summary').textContent=`${cfg.label} · ${cfg.desc} · ${n} terms`;
+}
+function addPlayer(){if(sPlayers.length>=6)return;sPlayers.push({name:'Player '+(sPlayers.length+1)});renderSetup();}
+function rmPlayer(i){if(sPlayers.length<=1)return;sPlayers.splice(i,1);renderSetup();}
+function renderSetup(){
+  const list=document.getElementById('player-list');
+  list.innerHTML='';
+  sPlayers.forEach((p,i)=>{
+    const row=document.createElement('div');
+    row.className='player-row';
+    row.innerHTML=`<div class="pdot" style="background:${P_COLORS[i]}"></div>
+      <input class="player-input" value="${esc(p.name)}" placeholder="Player ${i+1}"
+             oninput="sPlayers[${i}].name=this.value">
+      ${sPlayers.length>1?`<button class="btn-rm" onclick="rmPlayer(${i})">×</button>`:''}`;
+    list.appendChild(row);
+  });
+  document.getElementById('btn-add').style.display=sPlayers.length>=6?'none':'';
+  // Show solo mode notice
+  const soloNote=document.getElementById('solo-note');
+  if(soloNote)soloNote.style.display=sPlayers.length===1?'block':'none';
+  selectContent(sContentKey);
+}
+
+// ── GAME STATE ──
+let G={};
+function initState(){
+  G={
+    players:[],currentIdx:0,
+    board:new Map(),hands:[],
+    sel:null,selCell:null,selFW:null,selSPICE:[],selAppositive:null,pendNeigh:[],
+    contentKey:null,soloMode:false,
+    R:50,svgW:0,svgH:0,boardRad:9,
+    timerSecs:0,timerLeft:0,timerInterval:null,
+  };
+}
+initState();
+
+function startGame(){
+  initState();
+  G.contentKey=sContentKey;
+  G.timerSecs=sTimerSecs;
+  G.timerLeft=sTimerSecs;
+  G.soloMode=sPlayers.length===1;
+  G.players=sPlayers.map((p,i)=>({
+    name:p.name.trim()||'Player '+(i+1),
+    color:P_COLORS[i],dark:P_DARK[i],
+    score:0,fw:{comparison:0,causation:0,ccot:0},
+    spice:{S:0,P:0,I:0,C:0,E:0,T:0},hintsUsed:0
+  }));
+  const terms=shuffle([...getTerms(sContentKey)]);
+  G.hands=G.players.map(()=>[]);
+  terms.forEach((t,i)=>G.hands[i%G.players.length].push(t));
+  showScreen('game');
+  const cont=document.getElementById('board-container');
+  G.svgW=cont.clientWidth;G.svgH=cont.clientHeight;
+  renderScoreboard();renderTurnBar();renderHand();renderBoard();
+  if(G.timerSecs>0)startTimer();
+}
+
+// ── TIMER ──
+function startTimer(){G.timerInterval=setInterval(()=>{G.timerLeft--;updateTimerDisplay();if(G.timerLeft<=0){clearInterval(G.timerInterval);endGame();}},1000);}
+function updateTimerDisplay(){
+  const el=document.getElementById('timer-display');
+  if(!el)return;
+  if(G.timerSecs===0){el.style.display='none';return;}
+  el.style.display='';
+  const m=Math.floor(G.timerLeft/60),s=G.timerLeft%60;
+  el.textContent=`⏱ ${m}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('timer-warn',G.timerLeft<300);
+}
+
+// ── HEX MATH ──
+Math.SQRT3=Math.sqrt(3);
+function h2px(q,r){return{x:G.R*1.5*q,y:G.R*(Math.SQRT3/2*q+Math.SQRT3*r)};}
+function cubeRnd(q,r){const s=-q-r;let rq=Math.round(q),rr=Math.round(r),rs=Math.round(s);const dq=Math.abs(rq-q),dr=Math.abs(rr-r),ds=Math.abs(rs-s);if(dq>dr&&dq>ds)rq=-rr-rs;else if(dr>ds)rr=-rq-rs;return{q:rq,r:rr};}
+function nbrs(q,r){return[{q:q+1,r},{q:q-1,r},{q,r:r+1},{q,r:r-1},{q:q+1,r:r-1},{q:q-1,r:r+1}];}
+function hkey(q,r){return q+','+r;}
+function hPts(cx,cy,R){const pts=[];for(let i=0;i<6;i++){const a=Math.PI/180*60*i;pts.push(`${cx+R*Math.cos(a)},${cy+R*Math.sin(a)}`);}return pts.join(' ');}
+function validCells(){
+  if(G.board.size===0)return[{q:0,r:0}];
+  const s=new Set();
+  G.board.forEach((_,k)=>{const[q,r]=k.split(',').map(Number);nbrs(q,r).forEach(n=>{if(!G.board.has(hkey(n.q,n.r)))s.add(hkey(n.q,n.r));});});
+  return Array.from(s).map(k=>{const[q,r]=k.split(',').map(Number);return{q,r};});
+}
+function tileFont(text){
+  const segs=text.split(/[ \-]/);
+  const maxLen=Math.max(...segs.map(w=>w.length));
+  if(maxLen>15)return 6.0;if(maxLen>11)return 7.0;if(maxLen>8)return 7.5;return 8.5;
+}
+function wrap(text,max){
+  const exp=text.replace(/-/g,' \u2011');
+  const words=exp.split(' ');const lines=[];let cur='';
+  words.forEach(w=>{const t=(cur?cur+' ':'')+w;if(t.length>max&&cur){lines.push(cur);cur=w;}else cur=t;});
+  if(cur)lines.push(cur);
+  return lines.map(l=>l.replace(/ \u2011/g,'-')).slice(0,4);
+}
+
+// ── BOARD ──
+function renderBoard(){
+  const svg=document.getElementById('board-svg');
+  const R=G.R;
+  const valid=G.sel?validCells():[];
+  const cells=new Map();
+  for(let q=-G.boardRad;q<=G.boardRad;q++)
+    for(let r=-G.boardRad;r<=G.boardRad;r++)
+      if(Math.abs(q+r)<=G.boardRad)cells.set(hkey(q,r),{q,r,type:'bg'});
+  G.board.forEach((c,k)=>cells.set(k,{...c,type:'placed'}));
+  valid.forEach(v=>{const k=hkey(v.q,v.r);if(!G.board.has(k))cells.set(k,{q:v.q,r:v.r,type:'valid'});});
+  let mnx=Infinity,mxx=-Infinity,mny=Infinity,mxy=-Infinity;
+  cells.forEach(c=>{const p=h2px(c.q,c.r);mnx=Math.min(mnx,p.x-R);mxx=Math.max(mxx,p.x+R);mny=Math.min(mny,p.y-R*.87);mxy=Math.max(mxy,p.y+R*.87);});
+  const pad=R,sW=Math.max(G.svgW,mxx-mnx+pad*2),sH=Math.max(G.svgH,mxy-mny+pad*2);
+  svg.setAttribute('width',sW);svg.setAttribute('height',sH);
+  svg.style.minWidth=sW+'px';svg.style.minHeight=sH+'px';
+  const ox=-mnx+pad,oy=-mny+pad;
+  let html='';
+  cells.forEach(c=>{
+    const p=h2px(c.q,c.r);const cx=p.x+ox,cy=p.y+oy;const pts=hPts(cx,cy,R-1);
+    if(c.type==='placed'){
+      const pl=G.players[c.pi];
+      const fs=tileFont(c.term);const lines=wrap(c.term,Math.floor(80/fs)),lh=fs*1.22,th=lines.length*lh,sy=cy-th/2+lh*.78;
+      const dotCol=c.spice&&c.spice[0]?SPICE_COL[c.spice[0]]:(FW_COL[c.fw]||'#555');
+      html+=`<g><polygon points="${pts}" fill="${pl.dark}" stroke="${pl.color}" stroke-width="2"/>`;
+      html+=`<circle cx="${cx+R*.55}" cy="${cy-R*.55}" r="5" fill="${dotCol}"/>`;
+      lines.forEach((ln,li)=>{html+=`<text x="${cx}" y="${sy+li*lh}" text-anchor="middle" font-family="Georgia,serif" font-size="${fs}" fill="#ddd" font-weight="bold">${esc(ln)}</text>`;});
+      html+=`</g>`;
+    }else if(c.type==='valid'){
+      html+=`<polygon data-q="${c.q}" data-r="${c.r}" points="${pts}" fill="rgba(212,170,96,.07)" stroke="rgba(212,170,96,.5)" stroke-width="1.5" class="vh"/>`;
+      html+=`<text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="16" fill="rgba(212,170,96,.45)" style="pointer-events:none">+</text>`;
+    }else{
+      html+=`<polygon points="${pts}" fill="rgba(255,255,255,.008)" stroke="rgba(255,255,255,.035)" stroke-width=".5"/>`;
+    }
+  });
+  svg.innerHTML=html;
+  svg.onclick=e=>{if(e.target.classList.contains('vh'))placeTile(parseInt(e.target.getAttribute('data-q')),parseInt(e.target.getAttribute('data-r')));};
+  if(G.board.size<=1){const cont=document.getElementById('board-container');const cp=h2px(0,0);cont.scrollLeft=Math.max(0,cp.x+ox-G.svgW/2);cont.scrollTop=Math.max(0,cp.y+oy-G.svgH/2);}
+}
+
+// ── HAND ──
+function renderHand(){
+  const cont=document.getElementById('hand-container');
+  const pl=G.players[G.currentIdx];const hand=G.hands[G.currentIdx];
+  cont.innerHTML='';
+  if(!hand.length){cont.innerHTML='<div style="color:#4a6a80;font-size:.82rem;padding:0 12px;">No tiles left</div>';return;}
+  hand.forEach(term=>{
+    const wdiv=document.createElement('div');wdiv.className='hand-tile-wrap';
+    const isSel=G.sel===term;
+    const fs=tileFont(term);const R=35,W=R*2+4,H=R*Math.SQRT3+4,cx=W/2,cy=H/2;
+    const pts=hPts(cx,cy,R-2);
+    const maxC=Math.floor(62/fs);const lines=wrap(term,maxC);
+    const lh=fs*1.22,sy=cy-(lines.length*lh)/2+lh*.78;
+    const tsvg=lines.map((l,li)=>`<text x="${cx}" y="${sy+li*lh}" text-anchor="middle" font-family="Georgia,serif" font-size="${fs}" fill="${isSel?'#fff':'#ddd'}" font-weight="bold">${esc(l)}</text>`).join('');
+    wdiv.innerHTML=`<svg class="hand-tile${isSel?' sel':''}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" onclick="selectTile('${term.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
+      <polygon points="${pts}" fill="${isSel?pl.color:pl.dark}" stroke="${pl.color}" stroke-width="${isSel?3:1.5}"/>
+      ${tsvg}</svg>`;
+    const hb=document.createElement('button');
+    hb.className='btn-hint';
+    hb.textContent='📖 Define';
+    // Solo mode: hints always free
+    hb.onclick=()=>showHint(term);
+    wdiv.appendChild(hb);
+    cont.appendChild(wdiv);
+  });
+}
+
+// ── HINT SYSTEM ──
+function showHint(term){
+  const d=DEFS[term];
+  const themes=d?d.themes:[];
+  document.getElementById('hint-term').textContent=term;
+  const tc=document.getElementById('hint-themes');
+  tc.innerHTML=themes.map(t=>`<span class="hint-theme-tag" style="background:rgba(0,0,0,.25);border:1px solid ${SPICE_COL[t]||'#555'};color:${SPICE_COL[t]||'#aaa'};padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:bold">${SPICE_FULL[t]||t}</span>`).join('');
+  // Reset to hidden state
+  document.getElementById('hint-def-hidden').style.display='';
+  document.getElementById('hint-def-reveal').style.display='none';
+  document.getElementById('hint-def-reveal').classList.remove('shown');
+  document.getElementById('hint-cancel-btn').style.display='';
+  const rb2=document.getElementById('hint-reveal-btn');
+  rb2.textContent=G.soloMode?'📖 Reveal Definition (Free)':'📖 Reveal Definition (−1 pt)';
+  rb2.onclick=()=>revealHint();
+  document.getElementById('hint-def-reveal').textContent=d?d.def:'No definition available.';
+  // Solo mode: no cost
+  const isFree=G.soloMode;
+  document.getElementById('hint-warn').textContent=isFree?'✓ Free in Solo Mode — definitions always visible.':'Using this hint costs 1 point from your score.';
+  document.getElementById('hint-reveal-btn').textContent=isFree?'📖 Show Definition (Free)':'📖 Reveal Definition (−1 pt)';
+  if(isFree){
+    // Auto-reveal for solo
+    document.getElementById('hint-def-hidden').style.display='none';
+    document.getElementById('hint-def-reveal').style.display='block';
+  }
+  document.getElementById('hint-pending-term').textContent=term;
+  showM('m-hint');
+}
+function revealHint(){
+  const term=document.getElementById('hint-pending-term').textContent;
+  if(!G.soloMode){
+    G.players[G.currentIdx].score=Math.max(0,G.players[G.currentIdx].score-1);
+    G.players[G.currentIdx].hintsUsed=(G.players[G.currentIdx].hintsUsed||0)+1;
+    renderScoreboard();
+  }
+  document.getElementById('hint-def-hidden').style.display='none';
+  document.getElementById('hint-def-reveal').style.display='block';
+  document.getElementById('hint-cancel-btn').style.display='none';
+  const rb=document.getElementById('hint-reveal-btn');
+  rb.textContent='↩ Use the term and return to the gameboard';
+  rb.disabled=false;
+  rb.onclick=()=>closeHint();
+}
+function closeHint(){hideM('m-hint');}
+
+// ── SCOREBOARD & TURN BAR ──
+function renderScoreboard(){
+  document.getElementById('scoreboard').innerHTML=G.players.map((p,i)=>`
+    <div class="score-chip${i===G.currentIdx?' cur':''}">
+      <div class="s-dot" style="background:${p.color}"></div>
+      <span class="s-name">${esc(p.name)}</span>
+      <span class="s-pts">${p.score}pt</span>
+    </div>`).join('');
+}
+function renderTurnBar(){
+  const p=G.players[G.currentIdx];
+  const tn=document.getElementById('tb-name');
+  tn.textContent=G.soloMode?'Solo Practice':p.name+"'s Turn";
+  tn.style.color=p.color;
+  document.getElementById('tb-instr').textContent=G.sel?'Tap a glowing + cell to place':'Select a tile below';
+  const total=G.hands.reduce((a,h)=>a+h.length,0);
+  document.getElementById('tb-count').textContent=`${total} tile${total!==1?'s':''} left`;
+  updateTimerDisplay();
+}
+
+// ── GAME ACTIONS ──
+function selectTile(term){G.sel=G.sel===term?null:term;renderHand();renderBoard();renderTurnBar();}
+
+function placeTile(q,r){
+  if(!G.sel||G.board.has(hkey(q,r)))return;
+  G.selCell={q,r};
+  G.pendNeigh=nbrs(q,r).filter(n=>G.board.has(hkey(n.q,n.r))).map(n=>G.board.get(hkey(n.q,n.r)).term);
+  G.selSPICE=[];G.selAppositive=null;
+  if(G.board.size===0){
+    G.board.set(hkey(q,r),{term:G.sel,fw:'none',spice:[],pi:G.currentIdx,q,r});
+    const hand=G.hands[G.currentIdx];hand.splice(hand.indexOf(G.sel),1);
+    G.sel=null;G.selCell=null;G.selFW=null;
+    renderScoreboard();renderTurnBar();renderHand();renderBoard();
+    document.getElementById('res-icon').textContent='🗺';
+    document.getElementById('res-pts').textContent='Board Opened!';
+    document.getElementById('res-msg').textContent='First tile placed — the board is open!';
+    showM('m-res');return;
+  }
+  document.getElementById('fw-term').textContent=G.sel;
+  const nc=G.pendNeigh.length;
+  document.getElementById('fw-conn').textContent=nc>0?'Connecting to: '+G.pendNeigh.slice(0,3).join(', ')+(nc>3?'...':''):'(No direct neighbors yet)';
+  showM('m-fw');
+}
+
+function selectFW(fw){
+  G.selFW=fw;hideM('m-fw');
+  const p=G.players[G.currentIdx];
+  const eterm=document.getElementById('exp-term');
+  eterm.textContent=G.sel;eterm.style.color=p.color;
+  const labels={comparison:'🔵 Comparison',causation:'🟡 Causation',ccot:'🟢 CCOT'};
+  document.getElementById('exp-fw').innerHTML=`<span style="color:${FW_COL[fw]}">${labels[fw]}</span>`;
+  document.getElementById('exp-neigh').textContent=G.pendNeigh.length>0?'Connecting to: '+G.pendNeigh.join(', '):'(first tile on board)';
+  // Show structural scaffold (no term substitution)
+  const scaffolds=STEMS[fw];
+  document.getElementById('exp-stem').textContent=scaffolds[Math.floor(Math.random()*scaffolds.length)];
+  // Reset SPICE + appositive
+  G.selSPICE=[];G.selAppositive=null;
+  document.querySelectorAll('.spice-btn').forEach(b=>b.classList.remove('act'));
+  document.querySelectorAll('.appos-btn').forEach(b=>b.classList.remove('act-yes','act-no'));
+  // Update vote label for solo vs group
+  document.getElementById('vote-label').textContent=G.soloMode?'Self-assess:':'After the explanation, the group decides:';
+  updateVoteButtons();
+  showM('m-exp');
+}
+
+function toggleSPICE(code){
+  const idx=G.selSPICE.indexOf(code);
+  if(idx>=0)G.selSPICE.splice(idx,1);else G.selSPICE.push(code);
+  document.querySelectorAll('.spice-btn').forEach(b=>b.classList.toggle('act',G.selSPICE.includes(b.dataset.code)));
+  updateVoteButtons();
+}
+
+function toggleAppositive(yes){
+  G.selAppositive=yes;
+  document.querySelectorAll('.appos-btn').forEach(b=>{
+    b.classList.remove('act-yes','act-no');
+    const isYes=b.dataset.appos==='yes';
+    if(isYes&&yes)b.classList.add('act-yes');
+    if(!isYes&&!yes)b.classList.add('act-no');
+  });
+  updateVoteButtons();
+}
+
+function updateVoteButtons(){
+  const hasSPICE=G.selSPICE.length>0;
+  const hasAppos=G.selAppositive===true;
+  // In solo mode, relax requirements slightly (appositive self-reported still required for Excellent)
+  document.querySelectorAll('.vote-btn').forEach(b=>{
+    const v=b.dataset.vote;
+    if(v==='excellent') b.classList.toggle('btn-disabled',!(hasSPICE&&hasAppos));
+    else if(v==='good'||v==='challenge') b.classList.toggle('btn-disabled',!hasSPICE);
+  });
+}
+
+function vote(v){
+  if(G.selSPICE.length===0)return;
+  if(v==='excellent'&&!G.selAppositive)return;
+  hideM('m-exp');
+  if(v==='excellent'||v==='good'){
+    const pts_conn=Math.max(1,G.pendNeigh.length);
+    const pts_she=v==='excellent'?3:1;
+    const total=pts_conn+pts_she;
+    G.board.set(hkey(G.selCell.q,G.selCell.r),{term:G.sel,fw:G.selFW,spice:[...G.selSPICE],pi:G.currentIdx,q:G.selCell.q,r:G.selCell.r});
+    G.players[G.currentIdx].score+=total;
+    G.players[G.currentIdx].fw[G.selFW]++;
+    G.selSPICE.forEach(t=>{G.players[G.currentIdx].spice[t]=(G.players[G.currentIdx].spice[t]||0)+1;});
+    const hand=G.hands[G.currentIdx];hand.splice(hand.indexOf(G.sel),1);
+    const icon=v==='excellent'?'✓✓✓':'✓';
+    const label=v==='excellent'?'Excellent! (+3)':'Good! (+1)';
+    document.getElementById('res-icon').textContent=icon;
+    document.getElementById('res-pts').textContent=`+${total} point${total!==1?'s':''}`;
+    let msg=label;if(pts_conn>1)msg+=` · ${pts_conn} connections!`;
+    document.getElementById('res-msg').textContent=msg;
+  }else{
+    document.getElementById('res-icon').textContent='✗';
+    document.getElementById('res-pts').textContent='Challenged!';
+    document.getElementById('res-msg').textContent='Tile returned to your hand. Strengthen that argument!';
+  }
+  showM('m-res');
+}
+
+function nextTurn(){
+  hideM('m-res');
+  G.sel=null;G.selCell=null;G.selFW=null;G.selSPICE=[];G.selAppositive=null;G.pendNeigh=[];
+  if(G.hands.every(h=>h.length===0)){endGame();return;}
+  let tries=0;
+  do{G.currentIdx=(G.currentIdx+1)%G.players.length;tries++;}
+  while(G.hands[G.currentIdx].length===0&&tries<G.players.length);
+  if(G.hands[G.currentIdx].length===0){endGame();return;}
+  renderScoreboard();renderTurnBar();renderHand();renderBoard();
+}
+function confirmEnd(){if(confirm('End the game now?'))endGame();}
+
+// ── INTRO BOSS LEVEL ──
+function generateAPPrompt(){
+  const tiles=Array.from(G.board.values()).filter(t=>t.fw!=='none');
+  if(tiles.length<2)return null;
+  const themeCount={};
+  tiles.forEach(t=>{if(t.spice)t.spice.forEach(s=>{themeCount[s]=(themeCount[s]||0)+1;});});
+  const fwCount={comparison:0,causation:0,ccot:0};
+  tiles.forEach(t=>{if(fwCount[t.fw]!==undefined)fwCount[t.fw]++;});
+  const topThemes=Object.entries(themeCount).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>SPICE_FULL[k].toLowerCase());
+  const domFW=Object.entries(fwCount).sort((a,b)=>b[1]-a[1])[0][0];
+  const periodMap={'1':'c. 1200–1450','2':'c. 1200–1450','3':'c. 1450–1750','4':'c. 1450–1750','5':'c. 1750–1900','6':'c. 1750–1900','7':'c. 1900–present','8':'c. 1900–present','9':'c. 1900–present','p1':'c. 1200–1450','p2':'c. 1450–1750','p3':'c. 1750–1900','p4':'c. 1900–present','leq1':'c. 1200–1750','leq2':'c. 1450–1900','leq3':'c. 1750–present','chaos':'c. 1200–present'};
+  const period=periodMap[G.contentKey]||'in this era';
+  const themeStr=topThemes.length>0?topThemes.join(' and '):'political and economic';
+  const prompts={
+    ccot:`Evaluate the extent to which ${themeStr} factors changed or continued in the period ${period}.`,
+    causation:`Evaluate the extent to which ${themeStr} factors caused significant transformations in the period ${period}.`,
+    comparison:`Evaluate the extent to which ${themeStr} factors drove similarities and differences across societies in the period ${period}.`
+  };
+  return prompts[domFW]||prompts.ccot;
+}
+
+function endGame(){
+  if(G.timerInterval)clearInterval(G.timerInterval);
+  if(G.board.size>=2){
+    showBossFight();
+  }else{
+    showEndScreen();
+  }
+}
+
+function showBossFight(){
+  showScreen('boss');
+  G.bossZoom=1.0;
+  renderBossBoard();
+  // AP Prompt
+  const prompt=generateAPPrompt();
+  document.getElementById('boss-ap-prompt').textContent=prompt||'Evaluate the extent to which political and economic factors drove significant change in this period.';
+  G.bossPrompt=prompt;
+}
+
+function renderBossBoard(){
+  const mainSVG=document.getElementById('board-svg');
+  const mini=document.getElementById('boss-board-mini');
+  if(!mainSVG||!mini||!mainSVG.getAttribute('width')) return;
+  const svgW=parseFloat(mainSVG.getAttribute('width')||400);
+  const svgH=parseFloat(mainSVG.getAttribute('height')||400);
+  // Base scale fits board width to screen; zoom multiplies on top
+  const baseScale=Math.min(window.innerWidth/svgW, 1);
+  const scale=baseScale*G.bossZoom;
+  const dW=Math.round(svgW*scale), dH=Math.round(svgH*scale);
+  // Cap zone height at 50% of viewport, min 180
+  const maxH=Math.max(180, Math.round(window.innerHeight*0.5));
+  const zoneH=Math.min(dH+8, maxH);
+  mini.innerHTML=`<svg width="${dW}" height="${dH}" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg">${mainSVG.innerHTML}</svg>`;
+  mini.style.height=zoneH+'px';
+  document.getElementById('boss-board-zone').style.height=zoneH+'px';
+  const pct=Math.round(G.bossZoom*100);
+  document.getElementById('boss-zoom-label').textContent=pct+'%';
+}
+
+function bossZoom(dir){
+  const steps=[0.5,0.6,0.7,0.85,1.0,1.25,1.5,1.75,2.0,2.5,3.0];
+  const cur=G.bossZoom||1.0;
+  let idx=steps.findIndex(s=>Math.abs(s-cur)<0.01);
+  if(idx<0) idx=steps.findIndex(s=>s>=cur);
+  if(idx<0) idx=steps.length-1;
+  idx=Math.max(0,Math.min(steps.length-1,idx+dir));
+  G.bossZoom=steps[idx];
+  renderBossBoard();
+}
+
+function copyBossPrompt(){
+  const txt=document.getElementById('boss-ap-prompt').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const b=document.getElementById('btn-copy-prompt');
+    b.textContent='✓ Copied!';setTimeout(()=>{b.textContent='📋 Copy Prompt';},2000);
+  }).catch(()=>{});
+}
+
+function proceedToScores(){showEndScreen();}
+
+function showEndScreen(){
+  showScreen('end');
+  const sorted=[...G.players].sort((a,b)=>b.score-a.score);
+  const winner=sorted[0];
+  const cfg=CONTENT[G.contentKey];
+  document.getElementById('end-sub').textContent=`${winner.name} wins with ${winner.score} points! · ${cfg.label}`;
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('podium').innerHTML=sorted.map((p,i)=>{
+    const allFW=Object.values(p.fw).every(v=>v>0);
+    const spBadges=Object.entries(p.spice).filter(([,v])=>v>0).map(([k,v])=>`<span class="badge b-${k.toLowerCase()}">${k} ×${v}</span>`).join('');
+    const fwBadges=[p.fw.comparison?`<span class="badge b-comp">CMP ×${p.fw.comparison}`:'',p.fw.causation?`<span class="badge b-caus">CAU ×${p.fw.causation}`:'',p.fw.ccot?`<span class="badge b-ccot">CCO ×${p.fw.ccot}`:''].filter(Boolean).map(b=>b+'</span>').join('');
+    const hintNote=p.hintsUsed?`<span style="font-size:.65rem;color:#6a8aa8;display:block;margin-top:3px">📖 ${p.hintsUsed} hint${p.hintsUsed!==1?'s':''}</span>`:'';
+    return `<div class="pr">
+      <div class="pr-rank">${medals[i]||(i+1)+'.'}${allFW?' ⭐':''}</div>
+      <div class="pr-info">
+        <div class="pr-name" style="color:${p.color}">${esc(p.name)}</div>
+        <div class="pr-pts">${p.score} pt · ${G.hands[G.players.indexOf(p)].length} tiles left</div>
+        <div class="pr-badges">${fwBadges}${spBadges}</div>${hintNote}
+      </div></div>`;
+  }).join('');
+}
+
+function resetGame(){if(G.timerInterval)clearInterval(G.timerInterval);initState();showScreen('setup');renderSetup();}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+function showM(id){document.getElementById(id).classList.add('show');}
+function hideM(id){document.getElementById(id).classList.remove('show');}
+
+renderSetup();
+window.addEventListener('resize',()=>{
+  if(document.getElementById('screen-game').classList.contains('active')){
+    const c=document.getElementById('board-container');G.svgW=c.clientWidth;G.svgH=c.clientHeight;renderBoard();
+  }
+});
+
+</script>
 </body>
 </html>
